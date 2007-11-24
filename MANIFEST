@@ -1,15 +1,4 @@
 Changes
-inc/Module/AutoInstall.pm
-inc/Module/Install.pm
-inc/Module/Install/AutoInstall.pm
-inc/Module/Install/Base.pm
-inc/Module/Install/Can.pm
-inc/Module/Install/Fetch.pm
-inc/Module/Install/Include.pm
-inc/Module/Install/Makefile.pm
-inc/Module/Install/Metadata.pm
-inc/Module/Install/Win32.pm
-inc/Module/Install/WriteAll.pm
 libpcre/Makefile.PL
 libpcre/pcre.h
 libpcre/pcre_chartables.c
@@ -39,9 +28,10 @@ libpcre/ucpinternal.h
 libpcre/ucptable.h
 LICENCE
 Makefile.PL
-MANIFEST			This list of files
+MANIFEST
 MANIFEST.SKIP
 META.yml
+onig-5.9.0.tar.gz
 PCRE.h
 PCRE.pm
 PCRE.xs

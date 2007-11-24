@@ -11,16 +11,14 @@ if ( $^O =~ /darwin/ ) {
     # Hack for Perl in a non-standard location on Mac OS (which it will
     # be until 5.10 ships with Mac OS).
     #
-    # We need the location of perl (easy: $^X) and the directory containing
+    # We need the location of perl and the directory containing
     # libperl.dylib.
-    for my $dir ( @INC ) {
-        my $core = "$dir/CORE";
-        next unless -d $core;
-
-        @lddlflags
-          = ( '-bundle', '-bundle_loader', $^X, '-lperl', "-L$core", );
-        last;
-    }
+    #
+    # Info from: http://www.advogato.org/article/627.html
+    @lddlflags = (
+        '-bundle', '-bundle_loader', $Config{perl5}, '-lperl',
+        "-L$Config{archlib}/CORE",
+    );
 }
 
 WriteMakefile(
