@@ -26,34 +26,40 @@ __END__
 
 =head1 NAME 
 
-re::engine::Oniguruma - Perl-compatible regular expression engine
+re::engine::Oniguruma - Use the Oniguruma regex engine with Perl
 
 =head1 SYNOPSIS
 
     use re::engine::Oniguruma;
 
-    if ("Hello, world" =~ /(?<=Hello|Hi), (world)/) {
+    if ("Hello, world" =~ /(?<=Hello), (world)/) {
         print "Greetings, $1!";
     }
 
 =head1 DESCRIPTION
 
-Replaces perl's regex engine in a given lexical scope with Oniguruma
-regular expressions provided by libpcre. Currently version 7.2 of Oniguruma
-is shipped with the module.
+Replaces perl's regex engine in a given lexical scope with the Oniguruma
+engine.
+
+See L<http://www.geocities.jp/kosako3/oniguruma/> for more information.
 
 =head1 AUTHORS
 
-E<AElig>var ArnfjE<ouml>rE<eth> Bjarmason <avar@cpan.org>
+Andy Armstrong <andy@hexten.net>
+
+Most of the code was modified from L<re::engine::PCRE>. Thanks to
+E<AElig>var ArnfjE<ouml>rE<eth> Bjarmason for writing it an all his
+other regex related work.
 
 =head1 COPYRIGHT
 
-Copyright 2007 E<AElig>var ArnfjE<ouml>rE<eth> Bjarmason.
+Copyright 2007, Andy Armstrong
+
+Oniguruma is copyright 2002-2007, K.Kosako <sndgk393 AT ybb DOT ne DOT jp>
 
 This program is free software; you can redistribute it and/or modify it
 under the same terms as Perl itself.
 
-The included F<libpcre> by I<Philip Hazel> is under a BSD-style
-license. See the F<LICENCE> file for details.
+See F<onig/COPYING> for details of Oniguruma's licence.
 
 =cut

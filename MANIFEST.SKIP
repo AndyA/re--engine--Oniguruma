@@ -1,6 +1,8 @@
 ^Makefile$
 ^blib\/
 \.o$
+\.lo$
+\.gz$
 pm_to_blib$
 ^PCRE\.(?:bs|c)$
 \.bak$
@@ -10,6 +12,7 @@ Makefile$
 \.bs$
 \.svn
 ^reference\/
+^Oniguruma.c$
 ^onig\/config\.status
 ^onig\/config\.log
 ^onig\/config\.h

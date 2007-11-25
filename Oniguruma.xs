@@ -2,7 +2,6 @@
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
-#include <pcre.h>
 #include <oniguruma.h>
 #include "Oniguruma.h"
 
