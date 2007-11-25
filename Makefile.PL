@@ -33,8 +33,7 @@ WriteMakefile(
     dist          => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES      => 're-engine-Oniguruma-*' },
     test  => { 'TESTS'    => 't/*.t t/*/*.t' },
-    DIR   => [ 'libpcre', 'onig' ],
-    INC   => '-Ilibpcre -Ionig',
-    LDDLFLAGS => join( ' ', @lddlflags, 'libpcre/*.o', 'onig/*.o' ),
-    # LDDLFLAGS => '-shared libpcre/*.o',
+    DIR   => [ 'onig' ],
+    INC   => '-Ionig',
+    LDDLFLAGS => join( ' ', @lddlflags, 'onig/*.o' ),
 );

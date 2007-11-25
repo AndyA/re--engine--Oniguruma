@@ -1,5 +1,3 @@
-#!./perl
-#
 # This is a home for regular expression tests that don't fit into
 # the format supported by op/regexp.t.  If you want to add a test
 # that does fit that format, add it to op/re_tests, not here.

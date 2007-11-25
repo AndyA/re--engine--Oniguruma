@@ -6,30 +6,15 @@
 #include <oniguruma.h>
 #include "Oniguruma.h"
 
+#define SAVEPVN(p,n)	((p) ? savepvn(p,n) : NULL)
+
 static int
 _build_callback( const UChar * name, const UChar * name_end, int ngroups,
                  int *groups, regex_t * onig, void *handle ) {
     REGEXP *const rx = handle;
-    SV *sv_dat = *hv_fetch( rx->paren_names, name, name_end - name, TRUE );
-
-    // if ( 1 ) {
-    //     char nbuf[256];
-    //     char gbuf[256];
-    //     char *gp = gbuf;
-    //     int i, len = name_end - name;
-    // 
-    //     memcpy( nbuf, name, len );
-    //     nbuf[len] = '\0';
-    // 
-    //     for ( i = 0; i < ngroups; i++ ) {
-    //         if ( i ) {
-    //             gp += sprintf( gp, ", " );
-    //         }
-    //         gp += sprintf( "%d", groups[i] );
-    //     }
-    // 
-    //     fprintf( stderr, "# Name: %s, %d group(s): %s\n", nbuf, ngroups );
-    // }
+    SV *sv_dat =
+        *hv_fetch( rx->paren_names, ( const char * ) name, name_end - name,
+                   TRUE );
 
     if ( !sv_dat ) {
         croak( "Oniguruma: Failed to allocate paren_names hash" );
@@ -68,7 +53,7 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     U32 extflags = flags;
     OnigOptionType option = ONIG_OPTION_NONE;
     OnigEncoding enc = ONIG_ENCODING_ASCII;
-    OnigSyntaxType *syntax = ONIG_SYNTAX_PERL;
+    OnigSyntaxType *syntax = ONIG_SYNTAX_PERL_NG;
     OnigErrorInfo err;
     int rc, nparens;
 

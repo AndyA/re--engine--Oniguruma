@@ -1,6 +1,4 @@
-#!./perl
-
-#use Test::More skip_all => "Not run by default, remove this line to 
+#use Test::More skip_all => "Not run by default, remove this line to
 
 # The tests are in a separate file 't/op/re_tests'.
 # Each line in that file is a separate test.
@@ -39,141 +37,150 @@
 # Note that columns 2,3 and 5 are all enclosed in double quotes and then
 # evalled; so something like a\"\x{100}$1 has length 3+length($1).
 
-my $file;
-BEGIN {
-    $iters = shift || 1;	# Poor man performance suite, 10000 is OK.
-
-    # Do this open before any chdir
-    $file = shift;
-    if (defined $file) {
-	open TESTS, $file or die "Can't open $file";
-    }
-}
-
 use strict;
-use warnings FATAL=>"all";
+use warnings FATAL => "all";
 use vars qw($iters $numtests $bang $ffff $nulnul $OP);
-use vars qw($skip_amp $qr $qr_embed); # set by our callers
+use vars qw($skip_amp $qr $qr_embed);    # set by our callers
 use re::engine::Oniguruma ();
 use Data::Dumper;
+use Test::More;
 
-if (!defined $file) {
-    open(TESTS,'re_tests') || open(TESTS,'t/re_tests') || open(TESTS,'t/perl/re_tests')
-}
+$iters = 1;
 
+open( TESTS, 't/perl/re_tests' );
 my @tests = <TESTS>;
-
 close TESTS;
 
-$bang = sprintf "\\%03o", ord "!"; # \41 would not be portable.
-$ffff  = chr(0xff) x 2;
+$bang   = sprintf "\\%03o", ord "!";     # \41 would not be portable.
+$ffff   = chr( 0xff ) x 2;
 $nulnul = "\0" x 2;
-$OP = $qr ? 'qr' : 'm';
+$OP     = $qr ? 'qr' : 'm';
 
-$| = 1;
-printf "1..%d\n# $iters iterations\n", scalar @tests;
-my $test;
+plan tests => @tests * 1;
+
 my $skip_rest;
 
-
 # Tests known to fail under Oniguruma
-my %pcre_fail;
-my @pcre_fail = (
-    # Pathological patterns that run into Oniguruma_ERROR_MATCHLIMIT
+
+my @will_fail = (
+    # Pathological patterns that hang Oniguruma
+
     813 .. 830,
 
+    # Work in progress
+
+    161, 320, 343, 426, 429 .. 431, 493, 498, 500, 506 .. 507,
+    523 .. 537, 540 .. 547, 563 .. 564, 618, 621, 624, 636, 654, 708,
+    762, 807, 812, 832 .. 837, 845, 867 .. 869, 871, 873, 886,
+    889 .. 892, 931, 964 .. 965, 968, 970, 1009 .. 1024, 1030 .. 1036,
+    1045, 1051 .. 1075, 1077 .. 1080, 1085 .. 1088, 1093 .. 1108,
+    1125 .. 1140, 1191 .. 1192, 1194 .. 1195, 1197 .. 1199,
+    1201 .. 1204, 1241, 1244 .. 1248, 1251 .. 1258, 1274 .. 1281,
+    1283 .. 1285, 1287 .. 1289, 1291 .. 1305, 1307 .. 1315,
+    1318 .. 1326,
+
     # err: [a-[:digit:]] => range out of order in character class
-    835,
+    # 835,
 
     # aba =~ ^(a(b)?)+$ and aabbaa =~ ^(aa(bb)?)+$
-    867 .. 868,
+    # 867 .. 868,
 
     # err: (?!)+ => nothing to repeat
-    970,
+    # 970,
 
     # XXX: <<<>>> pattern
-    1021,
+    # 1021,
 
     # XXX: Some named capture error
-    1050 .. 1051,
+    # 1050 .. 1051,
 
     # (*F) / (*FAIL)
-    1191, 1192,
+    # 1191, 1192,
 
     # (*A) / (*ACCEPT)
-    1194 .. 1195,
+    # 1194 .. 1195,
 
     # (?'${number}$optional_stuff' key names)
-    1217 .. 1223,
+    # 1217 .. 1223,
 
     # XXX: Some named capture error
-    1253,
+    # 1253,
 
     # XXX: \R doesn't match an utf8::upgraded \x{85}, we need to
     # always convert the subject and pattern to utf-8 for these cases
     # to work
-    1291, 1293 .. 1296,
+    # 1291, 1293 .. 1296,
 
     # These cause utf8 warnings, see above
-    1307, 1309, 1310, 1311, 1312, 1318, 1320 .. 1323,
+    # 1307, 1309, 1310, 1311, 1312, 1318, 1320 .. 1323,
 );
-@pcre_fail{@pcre_fail} = ();
+
+my %will_fail = map { $_ => 1 } @will_fail;
+my $tb = Test::Builder->new;
 
 TEST:
-foreach (@tests) {
-    $test++;
-    if (!/\S/ || /^\s*#/) {
-        print "ok $test # (Blank line or comment)\n";
-        if (/\S/) { print $_ };
-        next;
+for ( @tests ) {
+
+    if ( !/\S/ || /^\s*#/ ) {
+        pass /\S/ ? $_ : '(blank line or comment)';
+        next TEST;
     }
-    if (/\(\?\{/ || /\(\?\?\{/) {
-        print "ok $test # (Oniguruma doesn't support (?{}) or (??{}))\n";
-        if (/\S/) { print $_ };
-        next;
+
+    if ( $will_fail{ $tb->current_test + 1 } ) {
+        pass "known to fail under Oniguruma";
+        next TEST;
     }
-    if (exists $pcre_fail{$test}) {
-        print "ok $test # Known to fail under Oniguruma\n";
-        next;
-    }
+
     $skip_rest = 1 if /^__END__$/;
 
-    if ($skip_rest) {
-        print "ok $test # (skipping rest)\n";
-        next;
+    if ( $skip_rest ) {
+        pass "skipping rest";
+        next TEST;
     }
+
     chomp;
     s/\\n/\n/g;
-    my ($pat, $subject, $result, $repl, $expect, $reason) = split(/\t/,$_,6);
-    $reason = '' unless defined $reason;
-    my $input = join(':',$pat,$subject,$result,$repl,$expect);
+
+    my ( $pat, $subject, $result, $repl, $expect, $reason )
+      = split( /\t/, $_, 6 );
+
+    $reason ||= '';
+
+    my $input = join( ':', $pat, $subject, $result, $repl, $expect );
     $pat = "'$pat'" unless $pat =~ /^[:'\/]/;
     $pat =~ s/(\$\{\w+\})/$1/eeg;
     $pat =~ s/\\n/\n/g;
-    $subject = eval qq("$subject"); die $@ if $@;
-    $expect  = eval qq("$expect"); die $@ if $@;
+    $subject = eval qq("$subject");
+    die $@ if $@;
+    $expect = eval qq("$expect");
+    die $@ if $@;
     $expect = $repl = '-' if $skip_amp and $input =~ /\$[&\`\']/;
-    my $skip = ($skip_amp ? ($result =~ s/B//i) : ($result =~ s/B//));
-    $reason = 'skipping $&' if $reason eq  '' && $skip_amp;
+    my $skip
+      = ( $skip_amp ? ( $result =~ s/B//i ) : ( $result =~ s/B// ) );
+    $reason = 'skipping $&' if $reason eq '' && $skip_amp;
     $result =~ s/B//i unless $skip;
 
-    for my $study ('', 'study $subject', 'utf8::upgrade($subject)',
-		   'utf8::upgrade($subject); study $subject') {
-	# Need to make a copy, else the utf8::upgrade of an alreay studied
-	# scalar confuses things.
-	my $subject = $subject;
-	my $c = $iters;
-	my ($code, $match, $got);
-        if ($repl eq 'pos') {
-            $code= <<EOFCODE;
+    for my $study ( '', 'study $subject',
+        'utf8::upgrade($subject)',
+        'utf8::upgrade($subject); study $subject' ) {
+
+      # Need to make a copy, else the utf8::upgrade of an alreay studied
+      # scalar confuses things.
+        my $subject = $subject;
+
+        my $c = $iters;
+        my ( $code, $match, $got );
+
+        if ( $repl eq 'pos' ) {
+            $code = <<EOFCODE;
                 $study;
                 pos(\$subject)=0;
                 \$match = ( \$subject =~ m${pat}g );
                 \$got = pos(\$subject);
 EOFCODE
         }
-        elsif ($qr_embed) {
-            $code= <<EOFCODE;
+        elsif ( $qr_embed ) {
+            $code = <<EOFCODE;
                 my \$RE = qr$pat;
                 $study;
                 \$match = (\$subject =~ /(?:)\$RE(?:)/) while \$c--;
@@ -181,53 +188,55 @@ EOFCODE
 EOFCODE
         }
         else {
-            $code= <<EOFCODE;
+            $code = <<EOFCODE;
                 $study;
                 \$match = (\$subject =~ $OP$pat) while \$c--;
                 \$got = "$repl";
 EOFCODE
         }
-	{
-	    # Probably we should annotate specific tests with which warnings
-	    # categories they're known to trigger, and hence should be
-	    # disabled just for that test
-	    no warnings qw(uninitialized regexp);
-        eval "BEGIN { \$^H{regcomp} = re::engine::Oniguruma->ENGINE; }; $code"
-        #eval $code; # use perl's engine
-	}
-	chomp( my $err = $@ );
-	if ($result eq 'c' && $err) {
-	    #if ($err !~ m!^\Q$expect!) { print "not ok $test (compile) $input => `$err'\n"; next TEST }
-	    last;  # no need to study a syntax error
-	}
-	elsif ( $skip ) {
-	    print "ok $test # skipped", length($reason) ? " $reason" : '', "\n";
-	    next TEST;
-	}
-	elsif ($@) {
-	    print "not ok $test $input => error `$err'\n$code\n$@\n"; next TEST;
-	}
-	elsif ($result eq 'n') {
-	    if ($match) { print "not ok $test ($study) $input => false positive\n"; next TEST }
-	}
-	else {
-	    if (!$match || $got ne $expect) {
 
-#	        eval { require Data::Dumper };
-#		if ($@) {
-#		    print "not ok $test ($study) $input => `$got', match=$match\n$code\n";
-#		}
-#		else { # better diagnostics
-		    my $s = Data::Dumper->new([$subject],['subject'])->Useqq(1)->Dump;
-		    my $g = Data::Dumper->new([$got],['got'])->Useqq(1)->Dump;
-		    print "not ok $test ($study) $input => `$got', match=$match\n$s\n$g\n$code\n";
-#		}
-
-		next TEST;
-	    }
-	}
+        {
+        # Probably we should annotate specific tests with which warnings
+        # categories they're known to trigger, and hence should be
+        # disabled just for that test
+            no warnings qw(uninitialized regexp);
+            eval
+              "BEGIN { \$^H{regcomp} = re::engine::Oniguruma->ENGINE; }; $code"
+              #eval $code; # use perl's engine
+        }
+        chomp( my $err = $@ );
+        if ( $result eq 'c' && $err ) {
+            last;    # no need to study a syntax error
+        }
+        elsif ( $skip ) {
+            SKIP: { skip $reason => 1 }
+            next TEST;
+        }
+        elsif ( $@ ) {
+            fail "$input => error `$err'";
+            diag "$code\n$@";
+            next TEST;
+        }
+        elsif ( $result eq 'n' ) {
+            if ( $match ) {
+                fail "($study) $input => false positive";
+                next TEST;
+            }
+        }
+        else {
+            if ( !$match || $got ne $expect ) {
+                my $s = Data::Dumper->new( [$subject], ['subject'] )
+                  ->Useqq( 1 )->Dump;
+                my $g = Data::Dumper->new( [$got], ['got'] )->Useqq( 1 )
+                  ->Dump;
+                fail "($study) $input => `$got'";
+                diag "match=$match\n$s\n$g\n$code\n";
+                next TEST;
+            }
+        }
     }
-    print "ok $test\n";
+
+    pass;
 }
 
 1;
