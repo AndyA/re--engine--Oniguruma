@@ -1,5 +1,5 @@
 use Test::More tests => 12;
-use re::engine::PCRE;
+use re::engine::Oniguruma;
 
 "hlagh" =~ /
     (?<a>.)

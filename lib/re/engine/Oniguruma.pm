@@ -1,4 +1,4 @@
-package re::engine::Onigumura;
+package re::engine::Oniguruma;
 
 use 5.009005;
 use XSLoader ();
@@ -26,11 +26,11 @@ __END__
 
 =head1 NAME 
 
-re::engine::Onigumura - Perl-compatible regular expression engine
+re::engine::Oniguruma - Perl-compatible regular expression engine
 
 =head1 SYNOPSIS
 
-    use re::engine::Onigumura;
+    use re::engine::Oniguruma;
 
     if ("Hello, world" =~ /(?<=Hello|Hi), (world)/) {
         print "Greetings, $1!";
@@ -38,8 +38,8 @@ re::engine::Onigumura - Perl-compatible regular expression engine
 
 =head1 DESCRIPTION
 
-Replaces perl's regex engine in a given lexical scope with Onigumura
-regular expressions provided by libpcre. Currently version 7.2 of Onigumura
+Replaces perl's regex engine in a given lexical scope with Oniguruma
+regular expressions provided by libpcre. Currently version 7.2 of Oniguruma
 is shipped with the module.
 
 =head1 AUTHORS

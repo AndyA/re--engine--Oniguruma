@@ -1,6 +1,6 @@
 use strict;
 use Test::More tests => 20;
-use re::engine::PCRE;
+use re::engine::Oniguruma;
 
 {
     my ($a, $b, $c) = split /(:)/, "a:b";
@@ -38,7 +38,7 @@ use re::engine::PCRE;
 
 # / /, not a special case
 SKIP: {
-    skip 'bug in PCRE.xs' => 5;
+    skip 'bug in Oniguruma.xs' => 5;
     my ($a, $b, $c, $d, $e) = split / /, " x y ";
     is($a, "");
     is($b, "x");

@@ -1,5 +1,5 @@
 use Test::More tests => 3;
-use re::engine::PCRE;
+use re::engine::Oniguruma;
 
 SKIP: {
     skip "Results in a split loop, rx->offs[0] needs to be {1,1} not {0,0}", 3;

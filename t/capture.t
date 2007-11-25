@@ -2,7 +2,7 @@ use strict;
 
 use Test::More tests => 20;
 
-use re::engine::PCRE;
+use re::engine::Oniguruma;
 
 unless ("eep aoeu 420 eek" =~ /(.)(.)(.)(.) ([0-9]+)/) {
     fail "didn't match";

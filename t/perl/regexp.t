@@ -54,7 +54,7 @@ use strict;
 use warnings FATAL=>"all";
 use vars qw($iters $numtests $bang $ffff $nulnul $OP);
 use vars qw($skip_amp $qr $qr_embed); # set by our callers
-use re::engine::PCRE ();
+use re::engine::Oniguruma ();
 use Data::Dumper;
 
 if (!defined $file) {
@@ -76,10 +76,10 @@ my $test;
 my $skip_rest;
 
 
-# Tests known to fail under PCRE
+# Tests known to fail under Oniguruma
 my %pcre_fail;
 my @pcre_fail = (
-    # Pathological patterns that run into PCRE_ERROR_MATCHLIMIT
+    # Pathological patterns that run into Oniguruma_ERROR_MATCHLIMIT
     813 .. 830,
 
     # err: [a-[:digit:]] => range out of order in character class
@@ -128,12 +128,12 @@ foreach (@tests) {
         next;
     }
     if (/\(\?\{/ || /\(\?\?\{/) {
-        print "ok $test # (PCRE doesn't support (?{}) or (??{}))\n";
+        print "ok $test # (Oniguruma doesn't support (?{}) or (??{}))\n";
         if (/\S/) { print $_ };
         next;
     }
     if (exists $pcre_fail{$test}) {
-        print "ok $test # Known to fail under PCRE\n";
+        print "ok $test # Known to fail under Oniguruma\n";
         next;
     }
     $skip_rest = 1 if /^__END__$/;
@@ -192,7 +192,7 @@ EOFCODE
 	    # categories they're known to trigger, and hence should be
 	    # disabled just for that test
 	    no warnings qw(uninitialized regexp);
-        eval "BEGIN { \$^H{regcomp} = re::engine::PCRE->ENGINE; }; $code"
+        eval "BEGIN { \$^H{regcomp} = re::engine::Oniguruma->ENGINE; }; $code"
         #eval $code; # use perl's engine
 	}
 	chomp( my $err = $@ );

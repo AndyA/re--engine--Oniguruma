@@ -1,6 +1,6 @@
 use strict;
 use Test::More tests => 10;
-use re::engine::PCRE;
+use re::engine::Oniguruma;
 
 my $_;
 

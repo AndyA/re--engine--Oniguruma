@@ -3,7 +3,7 @@
 =cut
 
 use Test::More tests => 9;
-use re::engine::PCRE;
+use re::engine::Oniguruma;
 
 # Croaks on 32
 my $subexp = 9;

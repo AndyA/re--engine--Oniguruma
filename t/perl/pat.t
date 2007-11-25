@@ -4,7 +4,7 @@
 # the format supported by op/regexp.t.  If you want to add a test
 # that does fit that format, add it to op/re_tests, not here.
 
-#use re::engine::PCRE;
+#use re::engine::Oniguruma;
 use Test::More skip_all => "TODO";
 
 $| = 1;
