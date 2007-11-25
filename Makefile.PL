@@ -1,3 +1,4 @@
+require 5.009005;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -31,7 +32,6 @@ WriteMakefile(
     PL_FILES      => {},
     PREREQ_PM     => {
         'Test::More' => 0,
-        'perl'       => '5.9.5'
     },
     dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES    => 're-engine-Oniguruma-*' },

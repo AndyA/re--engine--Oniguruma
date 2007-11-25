@@ -86,6 +86,7 @@ onig/win32/config.h
 onig/win32/testc.c
 Oniguruma.h
 Oniguruma.xs
+README
 t/00-compile.t
 t/1-basic.t
 t/capture.t
@@ -102,3 +103,5 @@ t/split.t
 t/subexp.t
 t/unimport.t
 TODO
+xt/author/pod-coverage.t
+xt/author/pod.t

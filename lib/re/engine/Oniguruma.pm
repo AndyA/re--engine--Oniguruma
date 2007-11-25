@@ -1,6 +1,7 @@
 package re::engine::Oniguruma;
 
-use 5.009005;
+require 5.009005;
+
 use strict;
 use warnings;
 use XSLoader ();
