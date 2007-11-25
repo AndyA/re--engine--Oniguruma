@@ -1,11 +1,6 @@
-#use Test::More skip_all => "Not run by default, remove this line to
-
 # The tests are in a separate file 't/op/re_tests'.
 # Each line in that file is a separate test.
 # There are five columns, separated by tabs.
-#
-# Column 1 contains the pattern, optionally enclosed in C<''>.
-# Modifiers can be put after the closing C<'>.
 #
 # Column 2 contains the string to be matched.
 #
@@ -33,9 +28,6 @@
 #
 # If you want to add a regular expression test that can't be expressed
 # in this format, don't add it here: put it in op/pat.t instead.
-#
-# Note that columns 2,3 and 5 are all enclosed in double quotes and then
-# evalled; so something like a\"\x{100}$1 has length 3+length($1).
 
 use strict;
 use warnings FATAL => "all";
@@ -52,7 +44,7 @@ my @tests = <TESTS>;
 close TESTS;
 
 $bang   = sprintf "\\%03o", ord "!";     # \41 would not be portable.
-$ffff   = chr( 0xff ) x 2;
+$ffff   = chr(0xff) x 2;
 $nulnul = "\0" x 2;
 $OP     = $qr ? 'qr' : 'm';
 
@@ -63,9 +55,14 @@ my $skip_rest;
 # Tests known to fail under Oniguruma
 
 my @will_fail = (
+
     # Pathological patterns that hang Oniguruma
 
     813 .. 830,
+
+    # Failing on Debian
+
+    443, 1216 .. 1238,
 
     # Work in progress
 
@@ -73,9 +70,9 @@ my @will_fail = (
     523 .. 537, 540 .. 547, 563 .. 564, 618, 621, 624, 636, 654, 708,
     762, 807, 812, 832 .. 837, 845, 867 .. 869, 871, 873, 886,
     889 .. 892, 931, 964 .. 965, 968, 970, 1009 .. 1024, 1030 .. 1036,
-    1045, 1051 .. 1075, 1077 .. 1080, 1085 .. 1088, 1093 .. 1108,
+    1045,         1051 .. 1075, 1077 .. 1080, 1085 .. 1088, 1093 .. 1108,
     1125 .. 1140, 1191 .. 1192, 1194 .. 1195, 1197 .. 1199,
-    1201 .. 1204, 1241, 1244 .. 1248, 1251 .. 1258, 1274 .. 1281,
+    1201 .. 1204, 1241,         1244 .. 1248, 1251 .. 1258, 1274 .. 1281,
     1283 .. 1285, 1287 .. 1289, 1291 .. 1305, 1307 .. 1315,
     1318 .. 1326,
 
@@ -119,7 +116,7 @@ my %will_fail = map { $_ => 1 } @will_fail;
 my $tb = Test::Builder->new;
 
 TEST:
-for ( @tests ) {
+for (@tests) {
 
     if ( !/\S/ || /^\s*#/ ) {
         pass /\S/ ? $_ : '(blank line or comment)';
@@ -133,7 +130,7 @@ for ( @tests ) {
 
     $skip_rest = 1 if /^__END__$/;
 
-    if ( $skip_rest ) {
+    if ($skip_rest) {
         pass "skipping rest";
         next TEST;
     }
@@ -141,8 +138,8 @@ for ( @tests ) {
     chomp;
     s/\\n/\n/g;
 
-    my ( $pat, $subject, $result, $repl, $expect, $reason )
-      = split( /\t/, $_, 6 );
+    my ( $pat, $subject, $result, $repl, $expect, $reason ) =
+      split( /\t/, $_, 6 );
 
     $reason ||= '';
 
@@ -155,17 +152,18 @@ for ( @tests ) {
     $expect = eval qq("$expect");
     die $@ if $@;
     $expect = $repl = '-' if $skip_amp and $input =~ /\$[&\`\']/;
-    my $skip
-      = ( $skip_amp ? ( $result =~ s/B//i ) : ( $result =~ s/B// ) );
+    my $skip = ( $skip_amp ? ( $result =~ s/B//i ) : ( $result =~ s/B// ) );
     $reason = 'skipping $&' if $reason eq '' && $skip_amp;
     $result =~ s/B//i unless $skip;
 
-    for my $study ( '', 'study $subject',
-        'utf8::upgrade($subject)',
-        'utf8::upgrade($subject); study $subject' ) {
+    for my $study (
+        '',                        'study $subject',
+        'utf8::upgrade($subject)', 'utf8::upgrade($subject); study $subject'
+      )
+    {
 
-      # Need to make a copy, else the utf8::upgrade of an alreay studied
-      # scalar confuses things.
+        # Need to make a copy, else the utf8::upgrade of an alreay studied
+        # scalar confuses things.
         my $subject = $subject;
 
         my $c = $iters;
@@ -179,7 +177,7 @@ for ( @tests ) {
                 \$got = pos(\$subject);
 EOFCODE
         }
-        elsif ( $qr_embed ) {
+        elsif ($qr_embed) {
             $code = <<EOFCODE;
                 my \$RE = qr$pat;
                 $study;
@@ -196,39 +194,40 @@ EOFCODE
         }
 
         {
-        # Probably we should annotate specific tests with which warnings
-        # categories they're known to trigger, and hence should be
-        # disabled just for that test
+
+            # Probably we should annotate specific tests with which warnings
+            # categories they're known to trigger, and hence should be
+            # disabled just for that test
             no warnings qw(uninitialized regexp);
             eval
               "BEGIN { \$^H{regcomp} = re::engine::Oniguruma->ENGINE; }; $code"
+
               #eval $code; # use perl's engine
         }
         chomp( my $err = $@ );
         if ( $result eq 'c' && $err ) {
             last;    # no need to study a syntax error
         }
-        elsif ( $skip ) {
-            SKIP: { skip $reason => 1 }
+        elsif ($skip) {
+          SKIP: { skip $reason => 1 }
             next TEST;
         }
-        elsif ( $@ ) {
+        elsif ($@) {
             fail "$input => error `$err'";
             diag "$code\n$@";
             next TEST;
         }
         elsif ( $result eq 'n' ) {
-            if ( $match ) {
+            if ($match) {
                 fail "($study) $input => false positive";
                 next TEST;
             }
         }
         else {
             if ( !$match || $got ne $expect ) {
-                my $s = Data::Dumper->new( [$subject], ['subject'] )
-                  ->Useqq( 1 )->Dump;
-                my $g = Data::Dumper->new( [$got], ['got'] )->Useqq( 1 )
-                  ->Dump;
+                my $s =
+                  Data::Dumper->new( [$subject], ['subject'] )->Useqq(1)->Dump;
+                my $g = Data::Dumper->new( [$got], ['got'] )->Useqq(1)->Dump;
                 fail "($study) $input => `$got'";
                 diag "match=$match\n$s\n$g\n$code\n";
                 next TEST;
