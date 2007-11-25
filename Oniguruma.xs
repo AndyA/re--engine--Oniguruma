@@ -6,16 +6,66 @@
 #include <oniguruma.h>
 #include "Oniguruma.h"
 
+static int
+_build_callback( const UChar * name, const UChar * name_end, int ngroups,
+                 int *groups, regex_t * onig, void *handle ) {
+    REGEXP *const rx = handle;
+    SV *sv_dat = *hv_fetch( rx->paren_names, name, name_end - name, TRUE );
+
+    // if ( 1 ) {
+    //     char nbuf[256];
+    //     char gbuf[256];
+    //     char *gp = gbuf;
+    //     int i, len = name_end - name;
+    // 
+    //     memcpy( nbuf, name, len );
+    //     nbuf[len] = '\0';
+    // 
+    //     for ( i = 0; i < ngroups; i++ ) {
+    //         if ( i ) {
+    //             gp += sprintf( gp, ", " );
+    //         }
+    //         gp += sprintf( "%d", groups[i] );
+    //     }
+    // 
+    //     fprintf( stderr, "# Name: %s, %d group(s): %s\n", nbuf, ngroups );
+    // }
+
+    if ( !sv_dat ) {
+        croak( "Oniguruma: Failed to allocate paren_names hash" );
+    }
+
+    ( void ) SvUPGRADE( sv_dat, SVt_PVNV );
+
+    /* TODO: Assumes sizeof(int) == sizeof(I32) */
+    sv_setpvn( sv_dat, ( char * ) groups, sizeof( I32 ) * ngroups );
+    SvIOK_on( sv_dat );
+    SvIVX( sv_dat ) = ngroups;
+
+    return 0;
+}
+
+static void
+_build_name_map( REGEXP * const rx ) {
+    regex_t *onig = rx->pprivate;
+    if ( onig_number_of_names( onig ) ) {
+        rx->paren_names = newHV(  );
+        ( void ) onig_foreach_name( onig, _build_callback, rx );
+    }
+    else {
+        rx->paren_names = NULL;
+    }
+
+}
+
 REGEXP *
 Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     REGEXP *rx;
     regex_t *onig;
-
     STRLEN plen;
     UChar *exp = ( UChar * ) SvPV( ( SV * ) pattern, plen );
     UChar *exp_end = exp + plen;
     U32 extflags = flags;
-
     OnigOptionType option = ONIG_OPTION_NONE;
     OnigEncoding enc = ONIG_ENCODING_ASCII;
     OnigSyntaxType *syntax = ONIG_SYNTAX_PERL;
@@ -42,19 +92,17 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
             extflags |= RXf_NULL;
         }
         else if ( plen == 1 && exp[0] == ' ' ) {
-            /* C<split " ">, bypass the Oniguruma engine alltogether
-             * and act as perl does */
+            /* split " " */
             extflags |= ( RXf_SKIPWHITE | RXf_WHITE );
         }
     }
 
     if ( plen == 1 && exp[0] == '^' ) {
-        /* RXf_START_ONLY - Have C<split /^/> split on newlines */
+        /* split /^/ */
         extflags |= RXf_START_ONLY;
     }
-
     else if ( plen == 3 && strnEQ( "\\s+", ( const char * ) exp, 3 ) ) {
-        /* RXf_WHITE - Have C<split /\s+/> split on whitespace */
+        /* split /\s+/ */
         extflags |= RXf_WHITE;
     }
 
@@ -86,7 +134,6 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     }
 
     Newxz( rx, 1, REGEXP );
-
     rx->refcnt = 1;
     rx->extflags = extflags;
     rx->engine = &onig_engine;
@@ -104,51 +151,29 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
 
     /* Allocate space for captures */
     nparens = onig_number_of_captures( onig );
-
     rx->nparens = rx->lastparen = rx->lastcloseparen = nparens;
     Newxz( rx->offs, nparens + 1, regexp_paren_pair );
 
-#if 0
-    /* If named captures are defined make rx->paren_names */
-    pcre_fullinfo( ri, NULL, PCRE_INFO_NAMECOUNT, &namecount );
-
-    if ( namecount <= 0 ) {
-        rx->paren_names = NULL;
-    }
-    else {
-        Oniguruma_make_nametable( rx, ri, namecount );
-    }
-
-    /* set up space for the capture buffers */
-    pcre_fullinfo( ri, NULL, PCRE_INFO_SIZE, &length );
-    rx->intflags = ( U32 ) length;
-
-    /* Check how many parens we need */
-    pcre_fullinfo( ri, NULL, PCRE_INFO_CAPTURECOUNT, &nparens );
-
-    rx->nparens = rx->lastparen = rx->lastcloseparen = nparens;
-    Newxz( rx->offs, nparens + 1, regexp_paren_pair );
-#endif
+    /* Build map: names => groups */
+    _build_name_map( rx );
 
     /* return the regexp */
     return rx;
-
 }
 
 I32
-Oniguruma_exec( pTHX_ REGEXP * const rx, char *stringarg, char *strend,
+Oniguruma_exec( pTHX_ REGEXP * const rx,
+                char *stringarg, char *strend,
                 char *strbeg, I32 minend, SV * sv, void *data, U32 flags ) {
     regex_t *onig = rx->pprivate;
     OnigOptionType option = ONIG_OPTION_NONE;
     OnigRegion *region = onig_region_new(  );
     int rc, i;
-
     // fprintf( stderr, "# %p %p %p\n", stringarg, strbeg, strend );
-
     rc = onig_search( onig, ( const UChar * ) strbeg,
-                      ( const UChar * ) strend, ( const UChar * ) stringarg,
+                      ( const UChar * ) strend,
+                      ( const UChar * ) stringarg,
                       ( const UChar * ) strend, region, option );
-
     if ( rc == ONIG_MISMATCH ) {
         onig_region_free( region, 1 );
         return 0;
@@ -156,34 +181,35 @@ Oniguruma_exec( pTHX_ REGEXP * const rx, char *stringarg, char *strend,
     else if ( rc < 0 ) {
         /* TODO: Fix this static buffer */
         static UChar erbuf[ONIG_MAX_ERROR_MESSAGE_LEN];
-
         onig_region_free( region, 1 );
-        onig_error_code_to_str( erbuf, rc );
+        onig_error_code_to_str( erbuf, rc, NULL );
         croak( "Oniguruma: %s", erbuf );
     }
 
     rx->subbeg = strbeg;
     rx->sublen = strend - strbeg;
-
     for ( i = 0; i < region->num_regs; i++ ) {
+        /* Copy matches */
         rx->offs[i].start = region->beg[i];
         rx->offs[i].end = region->end[i];
         // fprintf( stderr, "# %3d %p - %p\n", i, region->beg[i],
         //          region->end[i] );
     }
+
     for ( ; i <= rx->nparens; i++ ) {
+        /* Blank remainder */
         rx->offs[i].start = -1;
         rx->offs[i].end = -1;
     }
 
     onig_region_free( region, 1 );
-
     return 1;
 }
 
 char *
-Oniguruma_intuit( pTHX_ REGEXP * const rx,
-                  SV * sv, char *strpos,
+Oniguruma_intuit( pTHX_ REGEXP *
+                  const rx, SV * sv,
+                  char *strpos,
                   char *strend, U32 flags, re_scream_pos_data * data ) {
     PERL_UNUSED_ARG( rx );
     PERL_UNUSED_ARG( sv );
@@ -217,64 +243,6 @@ Oniguruma_package( pTHX_ REGEXP * const rx ) {
     PERL_UNUSED_ARG( rx );
     return newSVpvs( "re::engine::Oniguruma" );
 }
-
-/*
- * Internal utility functions
- */
-
-// void
-// Oniguruma_make_nametable( REGEXP * const rx,
-//                           pcre * const ri, const int namecount ) {
-//     unsigned char *name_table, *tabptr;
-//     int name_entry_size;
-//     int i;
-//     IV j;
-//     /* The name table */
-//     pcre_fullinfo( ri, NULL, PCRE_INFO_NAMETABLE, &name_table );
-//     /* Size of each entry */
-//     pcre_fullinfo( ri, NULL, PCRE_INFO_NAMEENTRYSIZE, &name_entry_size );
-//     rx->paren_names = newHV(  );
-//     tabptr = name_table;
-//     for ( i = 0; i < namecount; i++ ) {
-//         const char *key = tabptr + 2;
-//         int npar = ( tabptr[0] << 8 ) | tabptr[1];
-//         SV *sv_dat = *hv_fetch( rx->paren_names, key, strlen( key ),
-//                                 TRUE );
-//         if ( !sv_dat )
-//             croak( "panic: paren_name hash element allocation failed" );
-//         if ( !SvPOK( sv_dat ) ) {
-//             /* The first (and maybe only) entry with this name */
-//             ( void ) SvUPGRADE( sv_dat, SVt_PVNV );
-//             sv_setpvn( sv_dat, ( char * ) &( npar ), sizeof( I32 ) );
-//             SvIOK_on( sv_dat );
-//             SvIVX( sv_dat ) = 1;
-//         }
-//         else {
-//             /* An entry under this name has appeared before, append */
-// 
-//             IV count = SvIV( sv_dat );
-//             I32 *pv = ( I32 * ) SvPVX( sv_dat );
-//             IV j;
-//             for ( j = 0; j < count; j++ ) {
-//                 if ( pv[i] == npar ) {
-//                     count = 0;
-//                     break;
-//                 }
-//             }
-// 
-//             if ( count ) {
-//                 pv = ( I32 * ) SvGROW( sv_dat,
-//                                        SvCUR( sv_dat ) +
-//                                        sizeof( I32 ) + 1 );
-//                 SvCUR_set( sv_dat, SvCUR( sv_dat ) + sizeof( I32 ) );
-//                 pv[count] = npar;
-//                 SvIVX( sv_dat )++;
-//             }
-//         }
-// 
-//         tabptr += name_entry_size;
-//     }
-// }
 
 /* *INDENT-OFF* */
 

@@ -16,8 +16,6 @@ EXTERN_C void *   Oniguruma_dupe(pTHX_ REGEXP * const, CLONE_PARAMS *);
 #endif
 END_EXTERN_C
 
-void Oniguruma_make_nametable(REGEXP * const, pcre * const, const int);
-
 const regexp_engine onig_engine = {
     Oniguruma_comp,
     Oniguruma_exec,
