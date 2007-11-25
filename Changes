@@ -1,2 +1,7 @@
 0.01    2007-11-25
     - Initial release
+
+0.02    2007-11-25
+    - Skipped some more tests that cause problems under Debian.
+
+0.03    2007-11-25

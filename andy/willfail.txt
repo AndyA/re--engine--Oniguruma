@@ -1,0 +1,233 @@
+  618: '$'m	a\nb\n	y	$-[0]	1
+  621: '$'m	b\na\n	y	$-[0]	1
+  624: '$'m	b\na	y	$-[0]	1
+  636: 'a$'m	a\nb\n	y	$-[0]	0
+  654: 'aa$'m	aa\nb\n	y	$-[0]	0
+  708: 'ab$'m	ab\nb\n	y	$-[0]	0
+  762: 'abb$'m	abb\nb\n	y	$-[0]	0
+  807: a(?{$a=2;$b=3;($b)=$a})b	yabz	y	$b	2
+  812: '^d[x][x][x]'m	abcd\ndxxx	y	-	-
+  813: .X(.+)+X	bbbbXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	y	-	-
+  814: .X(.+)+XX	bbbbXcXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	y	-	-
+  815: .XX(.+)+X	bbbbXXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	y	-	-
+  816: .X(.+)+X	bbbbXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	n	-	-
+  817: .X(.+)+XX	bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	n	-	-
+  818: .XX(.+)+X	bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	n	-	-
+  819: .X(.+)+[X]	bbbbXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	y	-	-
+  820: .X(.+)+[X][X]	bbbbXcXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	y	-	-
+  821: .XX(.+)+[X]	bbbbXXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	y	-	-
+  822: .X(.+)+[X]	bbbbXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	n	-	-
+  823: .X(.+)+[X][X]	bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	n	-	-
+  824: .XX(.+)+[X]	bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	n	-	-
+  825: .[X](.+)+[X]	bbbbXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	y	-	-
+  826: .[X](.+)+[X][X]	bbbbXcXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	y	-	-
+  827: .[X][X](.+)+[X]	bbbbXXcXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	y	-	-
+  828: .[X](.+)+[X]	bbbbXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	n	-	-
+  829: .[X](.+)+[X][X]	bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	n	-	-
+  830: .[X][X](.+)+[X]	bbbbXXXaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa	n	-	-
+  832: ([a-\d]+)	za-9z	y	$1	a-9
+  833: ([\d-z]+)	a0-za	y	$1	0-z
+  834: ([\d-\s]+)	a0- z	y	$1	0- 
+  835: ([a-[:digit:]]+)	za-9z	y	$1	a-9
+  836: ([[:digit:]-z]+)	=0-z=	y	$1	0-z
+  837: ([[:digit:]-[:alpha:]]+)	=0-z=	y	$1	0-z
+  845: '^\S\s+aa$'m	\nx aa	y	-	-
+  867: ^(a(b)?)+$	aba	y	-$1-$2-	-a--
+  868: ^(aa(bb)?)+$	aabbaa	y	-$1-$2-	-aa--
+  869: '^.{9}abc.*\n'm	123\nabcabcabcabc\n	y	-	-
+  871: ^(a)?(?(1)a|b)+$	a	n	-	-
+  873: ^(a\1?){4}$	aaaaaa	y	$1	aa
+  886: ^(a(??{"(?!)"})|(a)(?{1}))b	ab	y	$2	a	# [ID 20010811.006]
+  889: (A|B)*(?(1)(CD)|(CD))	CD	y	$2-$3	-CD
+  890: (A|B)*(?(1)(CD)|(CD))	ABCD	y	$2-$3	CD-
+  891: (A|B)*?(?(1)(CD)|(CD))	CD	y	$2-$3	-CD	# [ID 20010803.016]
+  892: (A|B)*?(?(1)(CD)|(CD))	ABCD	y	$2-$3	CD-
+  931: (??{})	x	y	-	-
+  964: (a|aa|aaa||aaaa|aaaaa|aaaaaa)(??{$1&&""})(b|c)	aaaaaaaaaaaaaaab	y	$1$2	aaaaaab
+  965: (a|aa|aaa|aaaa|aaaaa|aaaaaa)(??{$1&&"foo"})(b|c)	aaaaaaaaaaaaaaab	n	-	-
+  968: ^(.)\s+.$(?(1))	A B	y	$1	A	# [perl #37688]
+  970: (?!)+?|(.{2,4})	abcde	y	$1	abcd
+ 1009: ^(??{"a+"})a	aa	y	$&	aa
+ 1010: ^(?:(??{"a+"})|b)a	aa	y	$&	aa
+ 1011: ^(??{chr 0x100}).$	\x{100}\x{100}	y	$&	\x{100}\x{100}
+ 1012: ^(??{q(\x{100})}).	\x{100}\x{100}	y	$&	\x{100}\x{100}
+ 1013: ^(??{q(.+)})\x{100}	\x{100}\x{100}	y	$&	\x{100}\x{100}
+ 1014: ^(??{q(.)})\x{100}	\x{100}\x{100}	y	$&	\x{100}\x{100}
+ 1015: ^(??{chr 0x100})\xbb	\x{100}\x{bb}	y	$&	\x{100}\x{bb}
+ 1016: ^(.)(??{"(.)(.)"})(.)$	abcd	y	$1-$2	a-d
+ 1017: ^(.)(??{"(bz+|.)(.)"})(.)$	abcd	y	$1-$2	a-d
+ 1018: ^(.)((??{"(.)(cz+)"})|.)	abcd	y	$1-$2	a-b
+ 1019: ^a(?>(??{q(b)}))(??{q(c)})d	abcd	y	-	-
+ 1020: ^x(??{""})+$	x	y	$&	x
+ 1021: ^(<(?:[^<>]+|(?3)|(?1))*>)()(!>!>!>)$	<<!>!>!>><>>!>!>!>	y	$1	<<!>!>!>><>>
+ 1022: ^(<(?:[^<>]+|(?1))*>)$	<<><<<><>>>>	y	$1	<<><<<><>>>>
+ 1023: ((?2)*)([fF]o+)	fooFoFoo	y	$1-$2	fooFo-Foo
+ 1024: (<(?:[^<>]+|(?R))*>)	<<><<<><>>>>	y	$1	<<><<<><>>>>
+ 1030: (?<n>foo)(??{ $+{n} })	snofooefoofoowaa	y	$+{n}	foo
+ 1031: (?P<n>foo|bar|baz)	snofooewa	y	$1	foo
+ 1032: (?P<n>foo|bar|baz)	snofooewa	y	$+{n}	foo
+ 1033: (?P<n>foo|bar|baz)(?P<m>[ew]+)	snofooewa	y	$+{n}	foo
+ 1034: (?P<n>foo|bar|baz)(?P<m>[ew]+)	snofooewa	y	$+{m}	ew
+ 1035: (?P<n>foo)|(?P<n>bar)|(?P<n>baz)	snofooewa	y	$+{n}	foo
+ 1036: (?P<n>foo)(??{ $+{n} })	snofooefoofoowaa	y	$+{n}	foo
+ 1045: /(?'n'foo)(??{ $+{n} })/	snofooefoofoowaa	y	$+{n}	foo
+ 1051: /^(?'main'<(?:[^<>]+|(?&crap)|(?&main))*>)(?'empty')(?'crap'!>!>!>)$/	<<!>!>!>><>>!>!>!>	y	$+{main}	<<!>!>!>><>>
+ 1052: /^(?'main'<(?:[^<>]+|(?&main))*>)$/	<<><<<><>>>>	y	$1	<<><<<><>>>>
+ 1053: /(?'first'(?&second)*)(?'second'[fF]o+)/	fooFoFoo	y	$+{first}-$+{second}	fooFo-Foo
+ 1054: (?<A>foo)?(?(<A>)bar|nada)	foobar	y	$+{A}	foo
+ 1055: (?<A>foo)?(?(<A>)bar|nada)	foo-barnada	y	$&	nada
+ 1056: (?<A>foo)?(?(1)bar|nada)	foo-barnada	y	$&	nada
+ 1057: (?<A>foo(?(R)bar))?(?1)	foofoobar	y	$1	foo
+ 1058: (?<A>foo(?(R)bar))?(?1)	foofoobar	y	$&	foofoobar
+ 1059: (x)(?<A>foo(?(R&A)bar))?(?&A)	xfoofoobar	y	$2	foo
+ 1060: (x)(?<A>foo(?(R&A)bar))?(?&A)	xfoofoobar	y	$&	xfoofoobar
+ 1061: (x)(?<A>foo(?(R2)bar))?(?&A)	xfoofoobar	y	$2	foo
+ 1062: (x)(?<A>foo(?(R2)bar))?(?&A)	xfoofoobar	y	$&	xfoofoobar
+ 1063: (?1)(?(DEFINE)(blah))	blah	y	$&	blah
+ 1064: /^(?<PAL>(?<CHAR>.)((?&PAL)|.?)\k<CHAR>)$/	madamimadam	y	$&	madamimadam
+ 1065: /^(?<PAL>(?<CHAR>.)((?&PAL)|.?)\k<CHAR>)$/	madamiamadam	n	-	-
+ 1066: /(a)?((?1))(fox)/	aafox	y	$1-$2-$3	a-a-fox
+ 1067: /(a)*((?1))(fox)/	aafox	y	$1-$2-$3	a-a-fox
+ 1068: /(a)+((?1))(fox)/	aafox	y	$1-$2-$3	a-a-fox
+ 1069: /(a){1,100}((?1))(fox)/	aafox	y	$1-$2-$3	a-a-fox
+ 1070: /(a){0,100}((?1))(fox)/	aafox	y	$1-$2-$3	a-a-fox
+ 1071: /(ab)?((?1))(fox)/	ababfox	y	$1-$2-$3	ab-ab-fox
+ 1072: /(ab)*((?1))(fox)/	ababfox	y	$1-$2-$3	ab-ab-fox
+ 1073: /(ab)+((?1))(fox)/	ababfox	y	$1-$2-$3	ab-ab-fox
+ 1074: /(ab){1,100}((?1))(fox)/	ababfox	y	$1-$2-$3	ab-ab-fox
+ 1075: /(ab){0,100}((?1))(fox)/	ababfox	y	$1-$2-$3	ab-ab-fox
+ 1077: a++a	aaaaa	n	-	-
+ 1078: a*+a	aaaaa	n	-	-
+ 1079: a{1,5}+a	aaaaa	n	-	-
+ 1080: a?+a	ab	n	-	-
+ 1085: fooa++a	fooaaaaa	n	-	-
+ 1086: fooa*+a	fooaaaaa	n	-	-
+ 1087: fooa{1,5}+a	fooaaaaa	n	-	-
+ 1088: fooa?+a	fooab	n	-	-
+ 1093: (?:aA)++(?:aA)	aAaAaAaAaA	n	-	aAaAaAaAaA
+ 1094: (aA)++(aA)	aAaAaAaAaA	n	-	aAaAaAaAaA
+ 1095: (aA|bB)++(aA|bB)	aAaAbBaAbB	n	-	aAaAbBaAbB
+ 1096: (?:aA|bB)++(?:aA|bB)	aAbBbBbBaA	n	-	aAbBbBbBaA
+ 1097: (?:aA)*+(?:aA)	aAaAaAaAaA	n	-	aAaAaAaAaA
+ 1098: (aA)*+(aA)	aAaAaAaAaA	n	-	aAaAaAaAaA
+ 1099: (aA|bB)*+(aA|bB)	aAaAbBaAaA	n	-	aAaAbBaAaA
+ 1100: (?:aA|bB)*+(?:aA|bB)	aAaAaAbBaA	n	-	aAaAaAbBaA
+ 1101: (?:aA){1,5}+(?:aA)	aAaAaAaAaA	n	-	aAaAaAaAaA
+ 1102: (aA){1,5}+(aA)	aAaAaAaAaA	n	-	aAaAaAaAaA
+ 1103: (aA|bB){1,5}+(aA|bB)	aAaAbBaAaA	n	-	aAaAbBaAaA
+ 1104: (?:aA|bB){1,5}+(?:aA|bB)	bBbBbBbBbB	n	-	bBbBbBbBbB
+ 1105: (?:aA)?+(?:aA)	aAb	n	-	aAb
+ 1106: (aA)?+(aA)	aAb	n	-	aAb
+ 1107: (aA|bB)?+(aA|bB)	bBb	n	-	bBb
+ 1108: (?:aA|bB)?+(?:aA|bB)	aAb	n	-	aAb
+ 1125: foo(?:aA)++(?:aA)	fooaAaAaAaAaA	n	-	fooaAaAaAaAaA
+ 1126: foo(aA)++(aA)	fooaAaAaAaAaA	n	-	fooaAaAaAaAaA
+ 1127: foo(aA|bB)++(aA|bB)	foobBbBbBaAaA	n	-	foobBbBbBaAaA
+ 1128: foo(?:aA|bB)++(?:aA|bB)	fooaAaAaAaAaA	n	-	fooaAaAaAaAaA
+ 1129: foo(?:aA)*+(?:aA)	fooaAaAaAaAaA	n	-	fooaAaAaAaAaA
+ 1130: foo(aA)*+(aA)	fooaAaAaAaAaA	n	-	fooaAaAaAaAaA
+ 1131: foo(aA|bB)*+(aA|bB)	foobBaAbBaAaA	n	-	foobBaAbBaAaA
+ 1132: foo(?:aA|bB)*+(?:aA|bB)	fooaAaAbBbBaA	n	-	fooaAaAbBbBaA
+ 1133: foo(?:aA){1,5}+(?:aA)	fooaAaAaAaAaA	n	-	fooaAaAaAaAaA
+ 1134: foo(aA){1,5}+(aA)	fooaAaAaAaAaA	n	-	fooaAaAaAaAaA
+ 1135: foo(aA|bB){1,5}+(aA|bB)	fooaAbBbBaAaA	n	-	fooaAbBbBaAaA
+ 1136: foo(?:aA|bB){1,5}+(?:aA|bB)	fooaAbBbBaAbB	n	-	fooaAbBbBaAbB
+ 1137: foo(?:aA)?+(?:aA)	fooaAb	n	-	fooaAb
+ 1138: foo(aA)?+(aA)	fooaAb	n	-	fooaAb
+ 1139: foo(aA|bB)?+(aA|bB)	foobBb	n	-	foobBb
+ 1140: foo(?:aA|bB)?+(?:aA|bB)	fooaAb	n	-	fooaAb
+ 1191: a*(*FAIL)	aaaab	n	-	-
+ 1192: a*(*F)	aaaab	n	-	-
+ 1194: (A(A|B(*ACCEPT)|C)D)(E)	AB	y	$1	AB
+ 1195: (A(A|B(*ACCEPT)|C)D)(E)	ACDE	y	$1$2$3	ACDCE
+ 1197: (a)(?:(?-1)|(?+1))(b)	aab	y	$&-$1-$2	aab-a-b
+ 1198: (a)(?:(?-1)|(?+1))(b)	abb	y	$1-$2	a-b
+ 1199: (a)(?:(?-1)|(?+1))(b)	acb	n	-	-
+ 1201: (foo)(\g-2)	foofoo	y	$1-$2	foo-foo
+ 1202: (foo)(\g-2)(foo)(\g-2)	foofoofoofoo	y	$1-$2-$3-$4	foo-foo-foo-foo
+ 1203: (([abc]+) \g-1)(([abc]+) \g{-1})	abc abccba cba	y	$2-$4	abc-cba
+ 1204: (a)(b)(c)\g1\g2\g3	abcabc	y	$1$2$3	abc
+ 1216: /(?<_0_>foo) \k<_0_>/	..foo foo..	y	$+{_0_}	foo
+ 1217: /(?'0'foo) bar/	..foo bar..	c	-	Sequence (?'
+ 1218: /(?<0>foo) bar/	..foo bar..	c	-	Sequence (?<
+ 1219: /(?'12'foo) bar/	..foo bar..	c	-	Sequence (?'
+ 1220: /(?<12>foo) bar/	..foo bar..	c	-	Sequence (?<
+ 1221: /(?'1a'foo) bar/	..foo bar..	c	-	Sequence (?'
+ 1222: /(?<1a>foo) bar/	..foo bar..	c	-	Sequence (?<
+ 1223: /(?''foo) bar/	..foo bar..	c	-	Sequence (?''
+ 1224: /(?<>foo) bar/	..foo bar..	c	-	Sequence (?<>
+ 1225: /foo \k'n'/	foo foo	c	-	Reference to nonexistent named group
+ 1226: /foo \k<n>/	foo foo	c	-	Reference to nonexistent named group
+ 1227: /foo \k'a1'/	foo foo	c	-	Reference to nonexistent named group
+ 1228: /foo \k<a1>/	foo foo	c	-	Reference to nonexistent named group
+ 1229: /foo \k'_'/	foo foo	c	-	Reference to nonexistent named group
+ 1230: /foo \k<_>/	foo foo	c	-	Reference to nonexistent named group
+ 1231: /foo \k'_0_'/	foo foo	c	-	Reference to nonexistent named group
+ 1232: /foo \k<_0_>/	foo foo	c	-	Reference to nonexistent named group
+ 1233: /foo \k'0'/	foo foo	c	-	Sequence \\k'
+ 1234: /foo \k<0>/	foo foo	c	-	Sequence \\k<
+ 1235: /foo \k'12'/	foo foo	c	-	Sequence \\k'
+ 1236: /foo \k<12>/	foo foo	c	-	Sequence \\k<
+ 1237: /foo \k'1a'/	foo foo	c	-	Sequence \\k'
+ 1238: /foo \k<1a>/	foo foo	c	-	Sequence \\k<
+ 1241: /(?<as>as) (\w+) \k<as> (\w+)/	as easy as pie	y	$1-$2-$3	as-easy-pie
+ 1244: /(?'n'foo) \g{n}/	..foo foo..	y	$1	foo
+ 1245: /(?'n'foo) \g{n}/	..foo foo..	y	$+{n}	foo
+ 1246: /(?<n>foo) \g{n}/	..foo foo..	y	$1	foo
+ 1247: /(?<n>foo) \g{n}/	..foo foo..	y	$+{n}	foo
+ 1248: /(?<as>as) (\w+) \g{as} (\w+)/	as easy as pie	y	$1-$2-$3	as-easy-pie
+ 1251: /(?P<n>foo)(?P=n)/	..foofoo..	y	$1	foo
+ 1252: /(?P<n>foo)(?P=n)/	..foofoo..	y	$+{n}	foo
+ 1253: /(?:(?P<n>foo)|(?P<n>bar))(?P=n)/	..barbar..	y	$+{n}	bar
+ 1254: /^(?P<PAL>(?P<CHAR>.)((?P>PAL)|.?)(?P=CHAR))$/	madamimadam	y	$&	madamimadam
+ 1255: /^(?P<PAL>(?P<CHAR>.)((?P>PAL)|.?)(?P=CHAR))$/	madamiamadam	n	-	-
+ 1256: /(?P<n>foo) (?P=n)/	..foo foo..	y	$1	foo
+ 1257: /(?P<n>foo) (?P=n)/	..foo foo..	y	$+{n}	foo
+ 1258: /(?P<as>as) (\w+) (?P=as) (\w+)/	as easy as pie	y	$1-$2-$3	as-easy-pie
+ 1274: (?|a(.)b|d(.(o).)d|i(.)(.)j)(.)	d!o!da	y	$1-$2-$3	!o!-o-a
+ 1275: (?|a(.)b|d(.(o).)d|i(.)(.)j)(.)	aabc	y	$1-$2-$3	a--c
+ 1276: (?|a(.)b|d(.(o).)d|i(.)(.)j)(.)	ixyjp	y	$1-$2-$3	x-y-p
+ 1277: (?|(?|(a)|(b))|(?|(c)|(d)))	a	y	$1	a
+ 1278: (?|(?|(a)|(b))|(?|(c)|(d)))	b	y	$1	b
+ 1279: (?|(?|(a)|(b))|(?|(c)|(d)))	c	y	$1	c
+ 1280: (?|(?|(a)|(b))|(?|(c)|(d)))	d	y	$1	d
+ 1281: (.)(?|(.)(.)x|(.)d)(.)	abcde	y	$1-$2-$3-$4-$5-	b-c--e--
+ 1283: (?(DEFINE)(?<A>(?&B)+)(?<B>a))(?&A)	a	y	$&	a
+ 1284: (?(DEFINE)(?<A>(?&B)+)(?<B>a))(?&A)	aa	y	$&	aa
+ 1285: \x{100}?(??{""})xxx	xxx	y	$&	xxx
+ 1287: foo(\R)bar	foo\r\nbar	y	$1	\r\n
+ 1288: foo(\R)bar	foo\nbar	y	$1	\n
+ 1289: foo(\R)bar	foo\rbar	y	$1	\r
+ 1291: foo(\R+)bar	foo\r\n\x{85}\r\n\nbar	y	$1	\r\n\x{85}\r\n\n
+ 1292: (\V+)(\R)	foo\r\n\x{85}\r\n\nbar	y	$1-$2	foo-\r\n
+ 1293: (\R+)(\V)	foo\r\n\x{85}\r\n\nbar	y	$1-$2	\r\n\x{85}\r\n\n-b
+ 1294: foo(\R)bar	foo\x{85}bar	y	$1	\x{85}
+ 1295: (\V)(\R)	foo\x{85}bar	y	$1-$2	o-\x{85}
+ 1296: (\R)(\V)	foo\x{85}bar	y	$1-$2	\x{85}-b
+ 1297: foo(\R)bar	foo\r\nbar	y	$1	\r\n
+ 1298: (\V)(\R)	foo\r\nbar	y	$1-$2	o-\r\n
+ 1299: (\R)(\V)	foo\r\nbar	y	$1-$2	\r\n-b
+ 1300: foo(\R)bar	foo\r\nbar	y	$1	\r\n
+ 1301: (\V)(\R)	foo\r\nbar	y	$1-$2	o-\r\n
+ 1302: (\R)(\V)	foo\r\nbar	y	$1-$2	\r\n-b
+ 1303: foo(\R)bar	foo\rbar	y	$1	\r
+ 1304: (\V)(\R)	foo\rbar	y	$1-$2	o-\r
+ 1305: (\R)(\V)	foo\rbar	y	$1-$2	\r-b
+ 1307: foo(\v+)bar	foo\r\n\x{85}\r\n\nbar	y	$1	\r\n\x{85}\r\n\n
+ 1308: (\V+)(\v)	foo\r\n\x{85}\r\n\nbar	y	$1-$2	foo-\r
+ 1309: (\v+)(\V)	foo\r\n\x{85}\r\n\nbar	y	$1-$2	\r\n\x{85}\r\n\n-b
+ 1310: foo(\v)bar	foo\x{85}bar	y	$1	\x{85}
+ 1311: (\V)(\v)	foo\x{85}bar	y	$1-$2	o-\x{85}
+ 1312: (\v)(\V)	foo\x{85}bar	y	$1-$2	\x{85}-b
+ 1313: foo(\v)bar	foo\rbar	y	$1	\r
+ 1314: (\V)(\v)	foo\rbar	y	$1-$2	o-\r
+ 1315: (\v)(\V)	foo\rbar	y	$1-$2	\r-b
+ 1318: foo(\h+)bar	foo\t\x{A0}bar	y	$1	\t\x{A0}
+ 1319: (\H+)(\h)	foo\t\x{A0}bar	y	$1-$2	foo-\t
+ 1320: (\h+)(\H)	foo\t\x{A0}bar	y	$1-$2	\t\x{A0}-b
+ 1321: foo(\h)bar	foo\x{A0}bar	y	$1	\x{A0}
+ 1322: (\H)(\h)	foo\x{A0}bar	y	$1-$2	o-\x{A0}
+ 1323: (\h)(\H)	foo\x{A0}bar	y	$1-$2	\x{A0}-b
+ 1324: foo(\h)bar	foo\tbar	y	$1	\t
+ 1325: (\H)(\h)	foo\tbar	y	$1-$2	o-\t
+ 1326: (\h)(\H)	foo\tbar	y	$1-$2	\t-b

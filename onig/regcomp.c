@@ -6182,7 +6182,7 @@ print_indent_tree(FILE* f, Node* node, int indent)
 
   case NT_CCLASS:
     fprintf(f, "<cclass:%x>", (int )node);
-    if (IS_CCLASS_NOT(NCCLASS(node)) fputs(" not", f);
+    if (IS_CCLASS_NOT(NCCLASS(node))) fputs(" not", f);
     if (NCCLASS(node)->mbuf) {
       BBuf* bbuf = NCCLASS(node)->mbuf;
       for (i = 0; i < bbuf->used; i++) {
