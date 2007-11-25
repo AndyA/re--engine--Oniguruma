@@ -1,5 +1,4 @@
 /* Oniguruma.xs */
-
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
@@ -18,6 +17,10 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     U32 extflags = flags;
 
     OnigOptionType option = ONIG_OPTION_NONE;
+    OnigEncoding enc = ONIG_ENCODING_ASCII;
+    OnigSyntaxType *syntax = ONIG_SYNTAX_PERL;
+    OnigErrorInfo err;
+    int rc, nparens;
 
     // ONIG_OPTION_NONE               no option
     // ONIG_OPTION_SINGLELINE         '^' -> '\A', '$' -> '\Z'
@@ -34,10 +37,45 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     // ONIG_OPTION_DONT_CAPTURE_GROUP only named group captured.
     // ONIG_OPTION_CAPTURE_GROUP      named and no-named group captured.
 
-    OnigEncoding enc = ONIG_ENCODING_ASCII;
-    OnigSyntaxType *syntax = ONIG_SYNTAX_PERL;
-    OnigErrorInfo err;
-    int rc, nparens;
+    if ( flags & RXf_SPLIT ) {
+        if ( plen == 0 ) {
+            extflags |= RXf_NULL;
+        }
+        else if ( plen == 1 && exp[0] == ' ' ) {
+            /* C<split " ">, bypass the Oniguruma engine alltogether
+             * and act as perl does */
+            extflags |= ( RXf_SKIPWHITE | RXf_WHITE );
+        }
+    }
+
+    if ( plen == 1 && exp[0] == '^' ) {
+        /* RXf_START_ONLY - Have C<split /^/> split on newlines */
+        extflags |= RXf_START_ONLY;
+    }
+
+    else if ( plen == 3 && strnEQ( "\\s+", ( const char * ) exp, 3 ) ) {
+        /* RXf_WHITE - Have C<split /\s+/> split on whitespace */
+        extflags |= RXf_WHITE;
+    }
+
+    /* Perl modifiers to Oniguruma flags, /s is implicit and /p isn't used
+     * but they pose no problem so ignore them */
+    if ( flags & RXf_PMf_FOLD ) {
+        option |= ONIG_OPTION_IGNORECASE;       /* /i */
+    }
+
+    if ( flags & RXf_PMf_EXTENDED ) {
+        option |= ONIG_OPTION_EXTEND;   /* /x */
+    }
+
+    if ( flags & RXf_PMf_MULTILINE ) {
+        option |= ONIG_OPTION_MULTILINE;        /* /m */
+    }
+
+    /* The pattern is known to be UTF-8. Perl wouldn't turn this on unless it's
+     * a valid UTF-8 sequence so tell Oniguruma not to check for that */
+    // if ( flags & RXf_UTF8 )
+    //     option |= ( PCRE_UTF8 | PCRE_NO_UTF8_CHECK );
 
     if ( rc = onig_new( &onig, exp, exp_end,
                         option, enc, syntax, &err ), ONIG_NORMAL != rc ) {
@@ -95,39 +133,6 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     /* return the regexp */
     return rx;
 
-#if 0
-    /* pcre_compile */
-    int options = PCRE_DUPNAMES;
-
-    /* named captures */
-    int namecount;
-
-    /* C<split " ">, bypass the PCRE engine alltogether and act as perl does */
-    if ( flags & RXf_SPLIT && plen == 1 && exp[0] == ' ' )
-        extflags |= ( RXf_SKIPWHITE | RXf_WHITE );
-
-    /* RXf_START_ONLY - Have C<split /^/> split on newlines */
-    if ( plen == 1 && exp[0] == '^' )
-        extflags |= RXf_START_ONLY;
-
-    /* RXf_WHITE - Have C<split /\s+/> split on whitespace */
-    else if ( plen == 3 && strnEQ( "\\s+", exp, 3 ) )
-        extflags |= RXf_WHITE;
-
-    /* Perl modifiers to PCRE flags, /s is implicit and /p isn't used
-     * but they pose no problem so ignore them */
-    if ( flags & RXf_PMf_FOLD )
-        options |= PCRE_CASELESS;       /* /i */
-    if ( flags & RXf_PMf_EXTENDED )
-        options |= PCRE_EXTENDED;       /* /x */
-    if ( flags & RXf_PMf_MULTILINE )
-        options |= PCRE_MULTILINE;      /* /m */
-
-    /* The pattern is known to be UTF-8. Perl wouldn't turn this on unless it's
-     * a valid UTF-8 sequence so tell PCRE not to check for that */
-    if ( flags & RXf_UTF8 )
-        options |= ( PCRE_UTF8 | PCRE_NO_UTF8_CHECK );
-#endif
 }
 
 I32
@@ -138,8 +143,10 @@ Oniguruma_exec( pTHX_ REGEXP * const rx, char *stringarg, char *strend,
     OnigRegion *region = onig_region_new(  );
     int rc, i;
 
-    rc = onig_search( onig, ( const UChar * ) stringarg,
-                      ( const UChar * ) strend, ( const UChar * ) strbeg,
+    // fprintf( stderr, "# %p %p %p\n", stringarg, strbeg, strend );
+
+    rc = onig_search( onig, ( const UChar * ) strbeg,
+                      ( const UChar * ) strend, ( const UChar * ) stringarg,
                       ( const UChar * ) strend, region, option );
 
     if ( rc == ONIG_MISMATCH ) {
@@ -155,13 +162,14 @@ Oniguruma_exec( pTHX_ REGEXP * const rx, char *stringarg, char *strend,
         croak( "Oniguruma: %s", erbuf );
     }
 
-    /* TODO: So how does /g work? */
     rx->subbeg = strbeg;
     rx->sublen = strend - strbeg;
 
     for ( i = 0; i < region->num_regs; i++ ) {
         rx->offs[i].start = region->beg[i];
         rx->offs[i].end = region->end[i];
+        // fprintf( stderr, "# %3d %p - %p\n", i, region->beg[i],
+        //          region->end[i] );
     }
     for ( ; i <= rx->nparens; i++ ) {
         rx->offs[i].start = -1;
