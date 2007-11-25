@@ -1,8 +1,5 @@
-a
-b
 Changes
 lib/re/engine/Oniguruma.pm
-LICENCE
 Makefile.PL
 MANIFEST
 MANIFEST.SKIP

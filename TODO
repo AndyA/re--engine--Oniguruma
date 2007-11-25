@@ -1,2 +1,3 @@
-* comp/exec error messages from pcre
-* split / nparens bug
+Make all the tests run and pass or find out why they don't
+
+Make it possible to select the syntax variant.

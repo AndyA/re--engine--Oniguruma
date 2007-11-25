@@ -1,13 +1,15 @@
 package re::engine::Oniguruma;
 
 use 5.009005;
+use strict;
+use warnings;
 use XSLoader ();
 
 # All engines should subclass the core Regexp package
 our @ISA = 'Regexp';
 
 BEGIN {
-    $VERSION = '0.13';
+    our $VERSION = '0.01';
     XSLoader::load __PACKAGE__, $VERSION;
 }
 
