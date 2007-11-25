@@ -1,25 +1,23 @@
 package re::engine::PCRE;
+
 use 5.009005;
 use XSLoader ();
 
 # All engines should subclass the core Regexp package
 our @ISA = 'Regexp';
 
-BEGIN
-{
+BEGIN {
     $VERSION = '0.13';
     XSLoader::load __PACKAGE__, $VERSION;
 }
 
-sub import
-{
+sub import {
     $^H{regcomp} = ENGINE;
 }
 
-sub unimport
-{
+sub unimport {
     delete $^H{regcomp}
-        if $^H{regcomp} == ENGINE;
+      if $^H{regcomp} == ENGINE;
 }
 
 1;
