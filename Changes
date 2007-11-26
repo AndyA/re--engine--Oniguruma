@@ -7,3 +7,5 @@
 0.03    2007-11-25
     - Fixed failing Debian tests.
     - Improved build system - it's now EUMM all the way down.
+
+0.04    2007-11-26

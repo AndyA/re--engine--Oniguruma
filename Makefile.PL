@@ -24,6 +24,9 @@ if ( $^O =~ /darwin/ ) {
 }
 
 my $oe = $Config{obj_ext};
+my @obj = map { $_ . $oe } qw(
+  Oniguruma onig/* onig/enc/*
+);
 
 WriteMakefile(
     ( MM->can( 'signature_target' ) ? ( SIGN => 1 ) : () ),
@@ -40,7 +43,8 @@ WriteMakefile(
     test  => { 'TESTS'  => 't/*.t t/*/*.t' },
     DIR   => ['onig'],
     INC   => '-Ionig',
-    LDDLFLAGS => join( ' ', @lddlflags, "onig/*$oe", "onig/enc/*$oe" ),
+    LDDLFLAGS => join( ' ', @lddlflags ),
+    OBJECT    => join( ' ', @obj ),
 );
 
 package MY;
