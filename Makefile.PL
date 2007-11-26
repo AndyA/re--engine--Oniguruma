@@ -40,3 +40,16 @@ WriteMakefile(
     INC   => '-Ionig',
     LDDLFLAGS => join( ' ', @lddlflags, "onig/*$oe", "onig/enc/*$oe" ),
 );
+
+package MY;
+
+# Need to strip the default subdirs target otherwise BSD make doesn't
+# see the real target for some reason.
+
+sub top_targets {
+    my $tt = shift->SUPER::top_targets( @_ );
+    $tt =~ s{^ subdirs \s .*? ^(?>\S) }{}msgx;
+    return $tt;
+}
+
+package main;
