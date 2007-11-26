@@ -48,7 +48,7 @@ package MY;
 
 sub top_targets {
     my $tt = shift->SUPER::top_targets( @_ );
-    $tt =~ s{^ subdirs \s .*? ^(?>\S) }{}msgx;
+    $tt =~ s{^ subdirs \s .*? ^(\S) }{$1}msgx;
     return $tt;
 }
 
