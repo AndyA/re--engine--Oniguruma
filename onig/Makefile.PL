@@ -44,10 +44,9 @@ sub write_config {
     my %conf_map = (
         HAVE_DLFCN_H     => 'i_dlfcn',
         HAVE_INTTYPES_H  => 'i_inttypes',
-        HAVE_MEMORY_H    => 'i_memory',
         HAVE_PROTOTYPES  => 'prototype',
         HAVE_STDLIB_H    => 'i_stdlib',
-        HAVE_STRINGS_H   => 'i_string',
+        HAVE_STRING_H   => 'i_string',
         HAVE_SYS_STAT_H  => 'i_sysstat',
         HAVE_SYS_TIMES_H => 'i_systimes',
         HAVE_SYS_TIME_H  => 'i_systime',
