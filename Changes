@@ -5,3 +5,5 @@
     - Skipped some more tests that cause problems under Debian.
 
 0.03    2007-11-25
+    - Fixed failing Debian tests.
+    - Improved build system - it's now EUMM all the way down.
