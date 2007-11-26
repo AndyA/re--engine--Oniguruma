@@ -56,11 +56,27 @@ my $skip_rest;
 
 my @will_fail = (
 
-    # Oniguruma allows nested quantifiers
-    161, 343,
+    ############## TODO ###############
+
+    # \n not matched by $ with 'm' modifier
+    618, 621, 624, 636, 654, 708, 762,
+
+    # \S shouldn't match \n in multiline mode (I think)
+    845,
+
+    # Non-greedy inside greedy
+    867, 868,
+
+    # Quantified dot
+    869,
 
     # Failing on Debian
     443, 1216 .. 1238,
+
+    ############## SKIP ###############
+
+    # Oniguruma allows nested quantifiers
+    161, 343,
 
     # Pathological patterns that hang Oniguruma
     812 .. 830,
@@ -69,10 +85,10 @@ my @will_fail = (
     320,
 
     # Backref inside group.
-    426,
+    426, 873,
 
     # Group syntax not supported by Oniguruma
-    429 .. 431, 493, 498, 500,
+    429 .. 431, 493, 498, 500, 807, 871,
 
     # Unsupported look behind
     506 .. 507,
@@ -80,11 +96,10 @@ my @will_fail = (
     # Group syntax not supported by Oniguruma
     523 .. 537, 540 .. 547, 563 .. 564,
 
-    # Unknown: \n not matched by $ with 'm' modifier
-    618, 621,
+    # Range syntax not supported
+    832 .. 837,
 
     # Work in progress
-    624, 636, 654, 708, 762, 807, 832 .. 837, 845, 867 .. 869, 871, 873,
     886, 889 .. 892, 931, 964 .. 965, 968, 970, 1009 .. 1024,
     1030 .. 1036, 1045, 1051 .. 1075, 1077 .. 1080, 1085 .. 1088,
     1093 .. 1108, 1125 .. 1140, 1191 .. 1192, 1194 .. 1195,
@@ -161,14 +176,14 @@ EOFCODE
             $code = <<EOFCODE;
                 my \$RE = qr$pat;
                 $study;
-                \$match = (\$subject =~ /(?:)\$RE(?:)/) while \$c--;
+                \$match = (\$subject =~ /(?:)\$RE(?:)/);
                 \$got = "$repl";
 EOFCODE
         }
         else {
             $code = <<EOFCODE;
                 $study;
-                \$match = (\$subject =~ $OP$pat) while \$c--;
+                \$match = (\$subject =~ $OP$pat);
                 \$got = "$repl";
 EOFCODE
         }
