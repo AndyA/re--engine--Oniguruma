@@ -13,6 +13,7 @@ Makefile$
 \.bs$
 \.svn
 ^andy\/
+^onig.orig\/
 ^reference\/
 ^Oniguruma.c$
 ^onig\/config\.status
