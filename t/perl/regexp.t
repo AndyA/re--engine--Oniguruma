@@ -55,14 +55,7 @@ my $skip_rest;
 # Tests known to fail under Oniguruma
 
 my @will_fail = (
-
     ############## TODO ###############
-
-    # \n not matched by $ with 'm' modifier
-    618, 621, 624, 636, 654, 708, 762,
-
-    # \S shouldn't match \n in multiline mode (I think)
-    845,
 
     # Non-greedy inside greedy
     867, 868,

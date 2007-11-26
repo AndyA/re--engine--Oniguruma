@@ -42,6 +42,57 @@ _build_name_map( REGEXP * const rx ) {
 
 }
 
+static void
+_make_options( const U32 flags, OnigOptionType * option, char *fl_on,
+               char *fl_off ) {
+    static struct flag_map_ent {
+        I32 pflag;
+        OnigOptionType oflag;
+        int name;
+    } flag_map[] = {
+        /* *INDENT-OFF* */
+        { RXf_PMf_EXTENDED,   ONIG_OPTION_EXTEND,     'x' },
+        { RXf_PMf_FOLD,       ONIG_OPTION_IGNORECASE, 'i' }, 
+        { RXf_PMf_SINGLELINE, ONIG_OPTION_SINGLELINE, 's' },
+        /* Strange multiline + negate_singleline options have
+         * been found empirically to work. Doesn't look right
+         * though... */
+        { RXf_PMf_MULTILINE,  ONIG_OPTION_MULTILINE
+                    | ONIG_OPTION_NEGATE_SINGLELINE,  'm' } 
+        /* *INDENT-ON* */
+    };
+    int i;
+
+    *option = ONIG_OPTION_NONE;
+
+    for ( i = 0; i < sizeof( flag_map ) / sizeof( flag_map[0] ); i++ ) {
+        if ( flags & flag_map[i].pflag ) {
+            *option |= flag_map[i].oflag;
+            *fl_on++ = flag_map[i].name;
+        }
+        else {
+            *fl_off++ = flag_map[i].name;
+        }
+    }
+
+    /* Terminate flags strings */
+    *fl_on = '\0';
+    *fl_off = '\0';
+}
+
+static void
+_save_rep( pTHX_ REGEXP * rx, const SV * const pattern, const char *fl_on,
+           const char *fl_off ) {
+    const char *rep =
+        form( "(?%s%s%s:%s)", fl_on, *fl_off ? "-" : "", fl_off,
+              SvPV_nolen( ( SV * ) pattern ) );
+
+    rx->wraplen = ( I32 ) strlen( rep );
+
+    /* TODO: Does this leak? */
+    rx->wrapped = savepv( rep );
+}
+
 REGEXP *
 Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     REGEXP *rx;
@@ -50,11 +101,12 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     UChar *exp = ( UChar * ) SvPV( ( SV * ) pattern, plen );
     UChar *exp_end = exp + plen;
     U32 extflags = flags;
-    OnigOptionType option = ONIG_OPTION_NONE;
+    OnigOptionType option;
     OnigEncoding enc = ONIG_ENCODING_ASCII;
     OnigSyntaxType *syntax = ONIG_SYNTAX_PERL_NG;
     OnigErrorInfo err;
     int rc, nparens;
+    char fl_on[5], fl_off[5];
 
     // ONIG_OPTION_NONE               no option
     // ONIG_OPTION_SINGLELINE         '^' -> '\A', '$' -> '\Z'
@@ -90,19 +142,25 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
         extflags |= RXf_WHITE;
     }
 
+    _make_options( flags, &option, fl_on, fl_off );
+
     /* Perl modifiers to Oniguruma flags, /s is implicit and /p isn't used
      * but they pose no problem so ignore them */
-    if ( flags & RXf_PMf_FOLD ) {
-        option |= ONIG_OPTION_IGNORECASE;       /* /i */
-    }
-
-    if ( flags & RXf_PMf_EXTENDED ) {
-        option |= ONIG_OPTION_EXTEND;   /* /x */
-    }
-
-    if ( flags & RXf_PMf_MULTILINE ) {
-        option |= ONIG_OPTION_MULTILINE;        /* /m */
-    }
+    // if ( flags & RXf_PMf_FOLD ) {
+    //     option |= ONIG_OPTION_IGNORECASE;       /* /i */
+    // }
+    // 
+    // if ( flags & RXf_PMf_MULTILINE ) {
+    //     option |= ONIG_OPTION_MULTILINE;        /* /m */
+    // }
+    // 
+    // if ( flags & RXf_PMf_SINGLELINE ) {
+    //     option |= ONIG_OPTION_SINGLELINE;       /* /s */
+    // }
+    // 
+    // if ( flags & RXf_PMf_EXTENDED ) {
+    //     option |= ONIG_OPTION_EXTEND;   /* /x */
+    // }
 
     /* The pattern is known to be UTF-8. Perl wouldn't turn this on unless it's
      * a valid UTF-8 sequence so tell Oniguruma not to check for that */
@@ -111,8 +169,7 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
 
     if ( rc = onig_new( &onig, exp, exp_end,
                         option, enc, syntax, &err ), ONIG_NORMAL != rc ) {
-        /* TODO: Fix this static buffer */
-        static UChar erbuf[ONIG_MAX_ERROR_MESSAGE_LEN];
+        UChar erbuf[ONIG_MAX_ERROR_MESSAGE_LEN];
         onig_error_code_to_str( erbuf, rc, err );
         croak( "Oniguruma: %s", erbuf );
     }
@@ -126,9 +183,7 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     rx->prelen = ( I32 ) plen;
     rx->precomp = SAVEPVN( ( char * ) exp, plen );
 
-    /* qr// stringification, TODO: (?flags:exp) */
-    rx->wraplen = rx->prelen;
-    rx->wrapped = ( char * ) rx->precomp;
+    _save_rep( aTHX_ rx, pattern, fl_on, fl_off );
 
     /* Store our private object */
     rx->pprivate = onig;
@@ -163,8 +218,7 @@ Oniguruma_exec( pTHX_ REGEXP * const rx,
         return 0;
     }
     else if ( rc < 0 ) {
-        /* TODO: Fix this static buffer */
-        static UChar erbuf[ONIG_MAX_ERROR_MESSAGE_LEN];
+        UChar erbuf[ONIG_MAX_ERROR_MESSAGE_LEN];
         onig_region_free( region, 1 );
         onig_error_code_to_str( erbuf, rc, NULL );
         croak( "Oniguruma: %s", erbuf );
