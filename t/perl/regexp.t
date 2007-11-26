@@ -63,9 +63,6 @@ my @will_fail = (
     # Quantified dot
     869,
 
-    # Failing on Debian
-    443, 1216 .. 1238,
-
     ############## SKIP ###############
 
     # Oniguruma allows nested quantifiers

@@ -9,6 +9,7 @@ eval 'use ExtUtils::MakeMaker::Coverage';
 my @lddlflags = ( $Config{lddlflags} );
 
 if ( $^O =~ /darwin/ ) {
+
     # Hack for Perl in a non-standard location on Mac OS (which it will
     # be until 5.10 ships with Mac OS).
     #
@@ -25,7 +26,7 @@ if ( $^O =~ /darwin/ ) {
 my $oe = $Config{obj_ext};
 
 WriteMakefile(
-    ( MM->can( 'signature_target' ) ? ( SIGN => 1 ) : () ),
+    ( MM->can('signature_target') ? ( SIGN => 1 ) : () ),
     NAME          => 're::engine::Oniguruma',
     AUTHOR        => 'Andy Armstrong <andy@hexten.net>',
     LICENSE       => 'perl',
@@ -33,6 +34,7 @@ WriteMakefile(
     ABSTRACT_FROM => 'lib/re/engine/Oniguruma.pm',
     PL_FILES      => {},
     PREREQ_PM     => { 'Test::More' => 0, },
+    OPTIMIZE      => '-g',
     dist          => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean => { FILES   => 're-engine-Oniguruma-*' },
     test  => { 'TESTS' => 't/*.t t/*/*.t' },
@@ -47,7 +49,7 @@ package MY;
 # see the real target for some reason.
 
 sub top_targets {
-    my $tt = shift->SUPER::top_targets( @_ );
+    my $tt = shift->SUPER::top_targets(@_);
     $tt =~ s{^ subdirs \s .*? ^(\S) }{$1}msgx;
     return $tt;
 }
