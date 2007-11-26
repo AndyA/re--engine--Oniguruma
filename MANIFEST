@@ -59,6 +59,9 @@ onig/index_ja.html
 onig/INSTALL
 onig/install-sh
 onig/ltmain.sh
+onig/Makefile.am
+onig/Makefile.in
+onig/Makefile.PL
 onig/missing
 onig/oniggnu.h
 onig/onigposix.h
