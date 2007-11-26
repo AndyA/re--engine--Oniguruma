@@ -89,7 +89,6 @@ onig/testc.c
 onig/testu.c
 onig/win32/config.h
 onig/win32/testc.c
-Oniguruma.h
 Oniguruma.xs
 README
 t/00-compile.t

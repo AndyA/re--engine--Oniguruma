@@ -17,6 +17,7 @@ if ( $^O =~ /darwin/ ) {
     # libperl.dylib.
     #
     # Info from: http://www.advogato.org/article/627.html
+
     @lddlflags = (
         '-bundle', '-bundle_loader', $Config{perl5}, '-lperl',
         "-L$Config{archlib}/CORE",

@@ -2,12 +2,45 @@
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
-#include <oniguruma.h>
-#include "Oniguruma.h"
+#include "oniguruma.h"
 
 #define SAVEPVN(p,n)	((p) ? savepvn(p,n) : NULL)
 
-static int
+STATIC REGEXP *re_comp( pTHX_ const SV * const pattern, const U32 flags );
+STATIC I32 re_exec( pTHX_ REGEXP * const rx,
+                    char *stringarg, char *strend,
+                    char *strbeg, I32 minend, SV * sv, void *data,
+                    U32 flags );
+STATIC char *re_intuit( pTHX_ REGEXP *
+                        const rx, SV * sv,
+                        char *strpos,
+                        char *strend, U32 flags,
+                        re_scream_pos_data * data );
+STATIC SV *re_checkstr( pTHX_ REGEXP * const rx );
+STATIC void re_free( pTHX_ REGEXP * const rx );
+STATIC void *re_dupe( pTHX_ REGEXP * const rx, CLONE_PARAMS * param );
+STATIC SV *re_package( pTHX_ REGEXP * const rx );
+
+/* This structure describes the regex engine to Perl */
+
+STATIC const regexp_engine onig_engine = {
+    re_comp,
+    re_exec,
+    re_intuit,
+    re_checkstr,
+    re_free,
+    Perl_reg_numbered_buff_fetch,
+    Perl_reg_numbered_buff_store,
+    Perl_reg_numbered_buff_length,
+    Perl_reg_named_buff,
+    Perl_reg_named_buff_iter,
+    re_package,
+#if defined(USE_ITHREADS)
+    re_dupe,
+#endif
+};
+
+STATIC int
 _build_callback( const UChar * name, const UChar * name_end, int ngroups,
                  int *groups, regex_t * onig, void *handle ) {
     REGEXP *const rx = handle;
@@ -29,7 +62,7 @@ _build_callback( const UChar * name, const UChar * name_end, int ngroups,
     return 0;
 }
 
-static void
+STATIC void
 _build_name_map( REGEXP * const rx ) {
     regex_t *onig = rx->pprivate;
     if ( onig_number_of_names( onig ) ) {
@@ -42,7 +75,7 @@ _build_name_map( REGEXP * const rx ) {
 
 }
 
-static void
+STATIC void
 _make_options( const U32 flags, OnigOptionType * option, char *fl_on,
                char *fl_off ) {
     static struct flag_map_ent {
@@ -80,7 +113,7 @@ _make_options( const U32 flags, OnigOptionType * option, char *fl_on,
     *fl_off = '\0';
 }
 
-static void
+STATIC void
 _save_rep( pTHX_ REGEXP * rx, const SV * const pattern, const char *fl_on,
            const char *fl_off ) {
     const char *rep =
@@ -93,8 +126,8 @@ _save_rep( pTHX_ REGEXP * rx, const SV * const pattern, const char *fl_on,
     rx->wrapped = savepv( rep );
 }
 
-REGEXP *
-Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
+STATIC REGEXP *
+re_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     REGEXP *rx;
     regex_t *onig;
     STRLEN plen;
@@ -200,10 +233,10 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     return rx;
 }
 
-I32
-Oniguruma_exec( pTHX_ REGEXP * const rx,
-                char *stringarg, char *strend,
-                char *strbeg, I32 minend, SV * sv, void *data, U32 flags ) {
+STATIC I32
+re_exec( pTHX_ REGEXP * const rx,
+         char *stringarg, char *strend,
+         char *strbeg, I32 minend, SV * sv, void *data, U32 flags ) {
     regex_t *onig = rx->pprivate;
     OnigOptionType option = ONIG_OPTION_NONE;
     OnigRegion *region = onig_region_new(  );
@@ -244,11 +277,11 @@ Oniguruma_exec( pTHX_ REGEXP * const rx,
     return 1;
 }
 
-char *
-Oniguruma_intuit( pTHX_ REGEXP *
-                  const rx, SV * sv,
-                  char *strpos,
-                  char *strend, U32 flags, re_scream_pos_data * data ) {
+STATIC char *
+re_intuit( pTHX_ REGEXP *
+           const rx, SV * sv,
+           char *strpos,
+           char *strend, U32 flags, re_scream_pos_data * data ) {
     PERL_UNUSED_ARG( rx );
     PERL_UNUSED_ARG( sv );
     PERL_UNUSED_ARG( strpos );
@@ -258,26 +291,26 @@ Oniguruma_intuit( pTHX_ REGEXP *
     return NULL;
 }
 
-SV *
-Oniguruma_checkstr( pTHX_ REGEXP * const rx ) {
+STATIC SV *
+re_checkstr( pTHX_ REGEXP * const rx ) {
     PERL_UNUSED_ARG( rx );
     return NULL;
 }
 
-void
-Oniguruma_free( pTHX_ REGEXP * const rx ) {
+STATIC void
+re_free( pTHX_ REGEXP * const rx ) {
     onig_free( rx->pprivate );
     // pcre_free( rx->pprivate );
 }
 
-void *
-Oniguruma_dupe( pTHX_ REGEXP * const rx, CLONE_PARAMS * param ) {
+STATIC void *
+re_dupe( pTHX_ REGEXP * const rx, CLONE_PARAMS * param ) {
     PERL_UNUSED_ARG( param );
     return rx->pprivate;
 }
 
-SV *
-Oniguruma_package( pTHX_ REGEXP * const rx ) {
+STATIC SV *
+re_package( pTHX_ REGEXP * const rx ) {
     PERL_UNUSED_ARG( rx );
     return newSVpvs( "re::engine::Oniguruma" );
 }
