@@ -38,5 +38,5 @@ WriteMakefile(
     test  => { 'TESTS' => 't/*.t t/*/*.t' },
     DIR   => ['onig'],
     INC   => '-Ionig',
-    LDDLFLAGS => join( ' ', @lddlflags, "onig/*$oe onig/enc/*$oe" ),
+    LDDLFLAGS => join( ' ', @lddlflags, "onig/*$oe", "onig/enc/*$oe" ),
 );
