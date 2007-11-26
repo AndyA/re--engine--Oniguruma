@@ -2615,29 +2615,31 @@ fetch_name(OnigCodePoint start_code, UChar** src, UChar* end,
     }
   }
 
-  while (!PEND) {
-    name_end = p;
-    PFETCH(c);
-    if (c == end_code || c == ')') break;
-
-    if (is_num == 1) {
-      if (! ONIGENC_IS_CODE_DIGIT(enc, c)) {
-	if (!ONIGENC_IS_CODE_WORD(enc, c))
-	  r = ONIGERR_INVALID_CHAR_IN_GROUP_NAME;
-	else
-	  r = ONIGERR_INVALID_GROUP_NAME;
+  if (r >= 0) {
+    while (!PEND) {
+      name_end = p;
+      PFETCH(c);
+      if (c == end_code || c == ')') break;
+  
+      if (is_num == 1) {
+        if (! ONIGENC_IS_CODE_DIGIT(enc, c)) {
+  	if (!ONIGENC_IS_CODE_WORD(enc, c))
+  	  r = ONIGERR_INVALID_CHAR_IN_GROUP_NAME;
+  	else
+  	  r = ONIGERR_INVALID_GROUP_NAME;
+        }
+      }
+      else {
+        if (!ONIGENC_IS_CODE_WORD(enc, c)) {
+          r = ONIGERR_INVALID_CHAR_IN_GROUP_NAME;
+        }
       }
     }
-    else {
-      if (!ONIGENC_IS_CODE_WORD(enc, c)) {
-        r = ONIGERR_INVALID_CHAR_IN_GROUP_NAME;
-      }
+  
+    if (c != end_code) {
+      r = ONIGERR_INVALID_GROUP_NAME;
+      name_end = end;
     }
-  }
-
-  if (c != end_code) {
-    r = ONIGERR_INVALID_GROUP_NAME;
-    name_end = end;
   }
 
   if (r == 0) {
