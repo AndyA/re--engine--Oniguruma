@@ -170,6 +170,7 @@ Oniguruma_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     if ( rc = onig_new( &onig, exp, exp_end,
                         option, enc, syntax, &err ), ONIG_NORMAL != rc ) {
         UChar erbuf[ONIG_MAX_ERROR_MESSAGE_LEN];
+        fprintf(stderr, "About to get error message for %08x\n", rc);
         onig_error_code_to_str( erbuf, rc, err );
         croak( "Oniguruma: %s", erbuf );
     }

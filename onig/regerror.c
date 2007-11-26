@@ -190,6 +190,8 @@ static int to_ascii(OnigEncoding enc, UChar *s, UChar *end,
   UChar *p;
   OnigCodePoint code;
 
+    fprintf(stderr, "to_ascii(..., %p, %p, ...)\n", s, end);
+
   if (ONIGENC_MBC_MINLEN(enc) > 1) {
     p = s;
     len = 0;
@@ -245,6 +247,7 @@ onig_error_code_to_str(s, code, va_alist)
   va_list vargs;
 
   va_init_list(vargs, code);
+  fprintf(stderr, "Code is %08x\n", code);
 
   switch (code) {
   case ONIGERR_UNDEFINED_NAME_REFERENCE:
@@ -259,12 +262,13 @@ onig_error_code_to_str(s, code, va_alist)
 		   parbuf, MAX_ERROR_PAR_LEN - 3, &is_over);
     q = onig_error_code_to_format(code);
     p = s;
+    fprintf(stderr, "Format is \"%s\"\n", q);
     while (*q != '\0') {
       if (*q == '%') {
 	q++;
 	if (*q == 'n') { /* '%n': name */
 	  xmemcpy(p, parbuf, len);
-      fprintf(stderr, "%p, %p, %d\n", p, parbuf, len);
+        fprintf(stderr, "%p, %p, %d\n", p, parbuf, len);
 	  p += len;
 	  if (is_over != 0) {
 	    xmemcpy(p, "...", 3);
