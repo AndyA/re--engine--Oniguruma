@@ -44,6 +44,7 @@ onig/enc/iso8859_8.c
 onig/enc/iso8859_9.c
 onig/enc/koi8.c
 onig/enc/koi8_r.c
+onig/enc/Makefile.PL
 onig/enc/mktable.c
 onig/enc/sjis.c
 onig/enc/unicode.c

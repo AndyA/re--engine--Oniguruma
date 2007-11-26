@@ -22,6 +22,8 @@ if ( $^O =~ /darwin/ ) {
     );
 }
 
+my $oe = $Config{obj_ext};
+
 WriteMakefile(
     ( MM->can( 'signature_target' ) ? ( SIGN => 1 ) : () ),
     NAME          => 're::engine::Oniguruma',
@@ -30,13 +32,11 @@ WriteMakefile(
     VERSION_FROM  => 'lib/re/engine/Oniguruma.pm',
     ABSTRACT_FROM => 'lib/re/engine/Oniguruma.pm',
     PL_FILES      => {},
-    PREREQ_PM     => {
-        'Test::More' => 0,
-    },
-    dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES    => 're-engine-Oniguruma-*' },
-    test  => { 'TESTS'  => 't/*.t t/*/*.t' },
+    PREREQ_PM     => { 'Test::More' => 0, },
+    dist          => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
+    clean => { FILES   => 're-engine-Oniguruma-*' },
+    test  => { 'TESTS' => 't/*.t t/*/*.t' },
     DIR   => ['onig'],
     INC   => '-Ionig',
-    LDDLFLAGS => join( ' ', @lddlflags, 'onig/*.o' ),
+    LDDLFLAGS => join( ' ', @lddlflags, "onig/*$oe onig/enc/*$oe" ),
 );
