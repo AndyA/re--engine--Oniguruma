@@ -16,8 +16,9 @@ STATIC char *onig_perl_intuit( pTHX_ REGEXP * const rx, SV * sv,
                                re_scream_pos_data * data );
 STATIC SV *onig_perl_checkstr( pTHX_ REGEXP * const rx );
 STATIC void onig_perl_free( pTHX_ REGEXP * const rx );
-STATIC void *re_dupe( pTHX_ REGEXP * const rx, CLONE_PARAMS * param );
-STATIC SV *re_package( pTHX_ REGEXP * const rx );
+STATIC void *onig_perl_dupe( pTHX_ REGEXP * const rx,
+                             CLONE_PARAMS * param );
+STATIC SV *onig_perl_package( pTHX_ REGEXP * const rx );
 
 /* This structure describes the regex engine to Perl */
 
@@ -32,9 +33,9 @@ STATIC const regexp_engine onig_engine = {
     Perl_reg_numbered_buff_length,
     Perl_reg_named_buff,
     Perl_reg_named_buff_iter,
-    re_package,
+    onig_perl_package,
 #if defined(USE_ITHREADS)
-    re_dupe,
+    onig_perl_dupe,
 #endif
 };
 
@@ -175,28 +176,10 @@ onig_perl_comp( pTHX_ const SV * const pattern, const U32 flags ) {
 
     _make_options( flags, &option, fl_on, fl_off );
 
-    /* Perl modifiers to Oniguruma flags, /s is implicit and /p isn't used
-     * but they pose no problem so ignore them */
-    // if ( flags & RXf_PMf_FOLD ) {
-    //     option |= ONIG_OPTION_IGNORECASE;       /* /i */
-    // }
-    // 
-    // if ( flags & RXf_PMf_MULTILINE ) {
-    //     option |= ONIG_OPTION_MULTILINE;        /* /m */
-    // }
-    // 
-    // if ( flags & RXf_PMf_SINGLELINE ) {
-    //     option |= ONIG_OPTION_SINGLELINE;       /* /s */
-    // }
-    // 
-    // if ( flags & RXf_PMf_EXTENDED ) {
-    //     option |= ONIG_OPTION_EXTEND;   /* /x */
-    // }
-
     /* The pattern is known to be UTF-8. Perl wouldn't turn this on unless it's
      * a valid UTF-8 sequence so tell Oniguruma not to check for that */
-    // if ( flags & RXf_UTF8 )
-    //     option |= ( PCRE_UTF8 | PCRE_NO_UTF8_CHECK );
+    /* if ( flags & RXf_UTF8 )
+       option |= ( PCRE_UTF8 | PCRE_NO_UTF8_CHECK ); */
 
     if ( rc = onig_new( &onig, exp, exp_end,
                         option, enc, syntax, &err ), ONIG_NORMAL != rc ) {
@@ -302,13 +285,13 @@ onig_perl_free( pTHX_ REGEXP * const rx ) {
 }
 
 STATIC void *
-re_dupe( pTHX_ REGEXP * const rx, CLONE_PARAMS * param ) {
+onig_perl_dupe( pTHX_ REGEXP * const rx, CLONE_PARAMS * param ) {
     PERL_UNUSED_ARG( param );
     return rx->pprivate;
 }
 
 STATIC SV *
-re_package( pTHX_ REGEXP * const rx ) {
+onig_perl_package( pTHX_ REGEXP * const rx ) {
     PERL_UNUSED_ARG( rx );
     return newSVpvs( "re::engine::Oniguruma" );
 }
