@@ -6,29 +6,27 @@
 
 #define SAVEPVN(p,n)	((p) ? savepvn(p,n) : NULL)
 
-STATIC REGEXP *re_comp( pTHX_ const SV * const pattern, const U32 flags );
-STATIC I32 re_exec( pTHX_ REGEXP * const rx,
-                    char *stringarg, char *strend,
-                    char *strbeg, I32 minend, SV * sv, void *data,
-                    U32 flags );
-STATIC char *re_intuit( pTHX_ REGEXP *
-                        const rx, SV * sv,
-                        char *strpos,
-                        char *strend, U32 flags,
-                        re_scream_pos_data * data );
-STATIC SV *re_checkstr( pTHX_ REGEXP * const rx );
-STATIC void re_free( pTHX_ REGEXP * const rx );
+STATIC REGEXP *regex_comp( pTHX_ const SV * const pattern,
+                           const U32 flags );
+STATIC I32 regex_exec( pTHX_ REGEXP * const rx, char *stringarg,
+                       char *strend, char *strbeg, I32 minend, SV * sv,
+                       void *data, U32 flags );
+STATIC char *regex_intuit( pTHX_ REGEXP * const rx, SV * sv, char *strpos,
+                           char *strend, U32 flags,
+                           re_scream_pos_data * data );
+STATIC SV *regex_checkstr( pTHX_ REGEXP * const rx );
+STATIC void regex_free( pTHX_ REGEXP * const rx );
 STATIC void *re_dupe( pTHX_ REGEXP * const rx, CLONE_PARAMS * param );
 STATIC SV *re_package( pTHX_ REGEXP * const rx );
 
 /* This structure describes the regex engine to Perl */
 
 STATIC const regexp_engine onig_engine = {
-    re_comp,
-    re_exec,
-    re_intuit,
-    re_checkstr,
-    re_free,
+    regex_comp,
+    regex_exec,
+    regex_intuit,
+    regex_checkstr,
+    regex_free,
     Perl_reg_numbered_buff_fetch,
     Perl_reg_numbered_buff_store,
     Perl_reg_numbered_buff_length,
@@ -127,7 +125,7 @@ _save_rep( pTHX_ REGEXP * rx, const SV * const pattern, const char *fl_on,
 }
 
 STATIC REGEXP *
-re_comp( pTHX_ const SV * const pattern, const U32 flags ) {
+regex_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     REGEXP *rx;
     regex_t *onig;
     STRLEN plen;
@@ -234,9 +232,9 @@ re_comp( pTHX_ const SV * const pattern, const U32 flags ) {
 }
 
 STATIC I32
-re_exec( pTHX_ REGEXP * const rx,
-         char *stringarg, char *strend,
-         char *strbeg, I32 minend, SV * sv, void *data, U32 flags ) {
+regex_exec( pTHX_ REGEXP * const rx,
+            char *stringarg, char *strend,
+            char *strbeg, I32 minend, SV * sv, void *data, U32 flags ) {
     regex_t *onig = rx->pprivate;
     OnigOptionType option = ONIG_OPTION_NONE;
     OnigRegion *region = onig_region_new(  );
@@ -278,10 +276,10 @@ re_exec( pTHX_ REGEXP * const rx,
 }
 
 STATIC char *
-re_intuit( pTHX_ REGEXP *
-           const rx, SV * sv,
-           char *strpos,
-           char *strend, U32 flags, re_scream_pos_data * data ) {
+regex_intuit( pTHX_ REGEXP *
+              const rx, SV * sv,
+              char *strpos,
+              char *strend, U32 flags, re_scream_pos_data * data ) {
     PERL_UNUSED_ARG( rx );
     PERL_UNUSED_ARG( sv );
     PERL_UNUSED_ARG( strpos );
@@ -292,15 +290,15 @@ re_intuit( pTHX_ REGEXP *
 }
 
 STATIC SV *
-re_checkstr( pTHX_ REGEXP * const rx ) {
+regex_checkstr( pTHX_ REGEXP * const rx ) {
     PERL_UNUSED_ARG( rx );
     return NULL;
 }
 
 STATIC void
-re_free( pTHX_ REGEXP * const rx ) {
+regex_free( pTHX_ REGEXP * const rx ) {
     onig_free( rx->pprivate );
-    // pcre_free( rx->pprivate );
+    // pcregex_free( rx->pprivate );
 }
 
 STATIC void *
