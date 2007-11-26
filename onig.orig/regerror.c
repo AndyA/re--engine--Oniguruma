@@ -264,7 +264,6 @@ onig_error_code_to_str(s, code, va_alist)
 	q++;
 	if (*q == 'n') { /* '%n': name */
 	  xmemcpy(p, parbuf, len);
-      fprintf(stderr, "%p, %p, %d\n", p, parbuf, len);
 	  p += len;
 	  if (is_over != 0) {
 	    xmemcpy(p, "...", 3);
