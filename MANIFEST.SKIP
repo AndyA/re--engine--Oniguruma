@@ -1,11 +1,9 @@
-^Makefile$
 ^blib\/
 \.o$
 \.lo$
 \.la$
 \.gz$
 pm_to_blib$
-^PCRE\.(?:bs|c)$
 \.bak$
 \.old$
 ^\.?#
@@ -20,7 +18,7 @@ Makefile$
 ^onig\/config\.log
 ^onig\/config\.h
 ^onig\/\.deps
-^onig\/Makefile
+^onig\/Makefile$
 ^onig\/libtool
 ^onig\/\.libs
 ^onig\/stamp-h1
