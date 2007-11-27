@@ -120,6 +120,8 @@ _save_rep( pTHX_ REGEXP * rx, const SV * const pattern, const char *fl_on,
               SvPV_nolen( ( SV * ) pattern ) );
 
     rx->wraplen = ( I32 ) strlen( rep );
+    /* Newxz( rx->wrapped, (rx->wraplen + 1), 1 );
+       memcpy( rx->wrapped, rep, rx->wraplen + 1 ); */
 
     /* TODO: Does this leak? */
     rx->wrapped = savepv( rep );
@@ -163,15 +165,16 @@ onig_perl_comp( pTHX_ const SV * const pattern, const U32 flags ) {
             /* split " " */
             extflags |= ( RXf_SKIPWHITE | RXf_WHITE );
         }
+        else if ( plen == 3 && strnEQ( "\\s+", ( const char * ) exp, 3 ) ) {
+            /* split /\s+/ */
+            extflags |= RXf_WHITE;
+        }
     }
 
+    /* TODO: Why isn't RXf_SPLIT set? */
     if ( plen == 1 && exp[0] == '^' ) {
         /* split /^/ */
         extflags |= RXf_START_ONLY;
-    }
-    else if ( plen == 3 && strnEQ( "\\s+", ( const char * ) exp, 3 ) ) {
-        /* split /\s+/ */
-        extflags |= RXf_WHITE;
     }
 
     _make_options( flags, &option, fl_on, fl_off );
@@ -280,8 +283,8 @@ onig_perl_checkstr( pTHX_ REGEXP * const rx ) {
 
 STATIC void
 onig_perl_free( pTHX_ REGEXP * const rx ) {
+    /* Safefree( rx->wrapped ); */
     onig_free( rx->pprivate );
-    // pconig_perl_free( rx->pprivate );
 }
 
 STATIC void *
