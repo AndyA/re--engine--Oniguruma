@@ -157,22 +157,14 @@ onig_perl_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     // ONIG_OPTION_DONT_CAPTURE_GROUP only named group captured.
     // ONIG_OPTION_CAPTURE_GROUP      named and no-named group captured.
 
-    if ( flags & RXf_SPLIT ) {
-        if ( plen == 0 ) {
-            extflags |= RXf_NULL;
-        }
-        else if ( plen == 1 && exp[0] == ' ' ) {
-            /* split " " */
-            extflags |= ( RXf_SKIPWHITE | RXf_WHITE );
-        }
-        else if ( plen == 3 && strnEQ( "\\s+", ( const char * ) exp, 3 ) ) {
-            /* split /\s+/ */
-            extflags |= RXf_WHITE;
-        }
+    if ( plen == 0 ) {
+        extflags |= RXf_NULL;
     }
-
-    /* TODO: Why isn't RXf_SPLIT set? */
-    if ( plen == 1 && exp[0] == '^' ) {
+    else if ( flags & RXf_SPLIT && plen == 1 && exp[0] == ' ' ) {
+        /* split " " */
+        extflags |= ( RXf_SKIPWHITE | RXf_WHITE );
+    }
+    else if ( plen == 1 && exp[0] == '^' ) {
         /* split /^/ */
         extflags |= RXf_START_ONLY;
     }

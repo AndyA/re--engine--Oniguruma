@@ -8,4 +8,6 @@
     - Fixed failing Debian tests.
     - Improved build system - it's now EUMM all the way down.
 
-0.04    2007-11-26
+0.04    2007-12-19
+    - Improvements to flag processing for split special cases.
+      Thanks Ævar!
