@@ -10,43 +10,51 @@ my @lddlflags = ( $Config{lddlflags} );
 
 if ( $^O =~ /darwin/ ) {
 
-    # Hack for Perl in a non-standard location on Mac OS (which it will
-    # be until 5.10 ships with Mac OS).
-    #
-    # We need the location of perl and the directory containing
-    # libperl.dylib.
-    #
-    # Info from: http://www.advogato.org/article/627.html
+  # Hack for Perl in a non-standard location on Mac OS (which it will
+  # be until 5.10 ships with Mac OS).
+  #
+  # We need the location of perl and the directory containing
+  # libperl.dylib.
+  #
+  # Info from: http://www.advogato.org/article/627.html
 
-    @lddlflags = (
-        '-bundle', '-bundle_loader', $Config{perl5}, '-lperl',
-        "-L$Config{archlib}/CORE",
-    );
+  @lddlflags = (
+    '-bundle', '-bundle_loader', $Config{perl5}, '-lperl',
+    "-L$Config{archlib}/CORE",
+  );
 }
 
 my $oe = $Config{obj_ext};
 my @obj = map { $_ . $oe } qw(
-  Oniguruma onig/* onig/enc/*
+ Oniguruma onig/* onig/enc/*
 );
 
 WriteMakefile(
-    ( MM->can( 'signature_target' ) ? ( SIGN => 1 ) : () ),
-    NAME          => 're::engine::Oniguruma',
-    AUTHOR        => 'Andy Armstrong <andy@hexten.net>',
-    LICENSE       => 'perl',
-    VERSION_FROM  => 'lib/re/engine/Oniguruma.pm',
-    ABSTRACT_FROM => 'lib/re/engine/Oniguruma.pm',
-    PL_FILES      => {},
-    PREREQ_PM     => { 'Test::More' => 0, },
-    # OPTIMIZE      => '-g',
-    dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
-    clean => { FILES    => 're-engine-Oniguruma-*' },
-    test  => { 'TESTS'  => 't/*.t t/*/*.t' },
-    DIR   => ['onig'],
-    INC   => '-Ionig',
-    LDDLFLAGS => join( ' ', @lddlflags ),
-    OBJECT    => join( ' ', @obj ),
+  ( MM->can( 'signature_target' ) ? ( SIGN => 1 ) : () ),
+  license( 'perl' ),
+  NAME          => 're::engine::Oniguruma',
+  AUTHOR        => 'Andy Armstrong <andy@hexten.net>',
+  VERSION_FROM  => 'lib/re/engine/Oniguruma.pm',
+  ABSTRACT_FROM => 'lib/re/engine/Oniguruma.pm',
+  PL_FILES      => {},
+  PREREQ_PM     => { 'Test::More' => 0, },
+  # OPTIMIZE      => '-g',
+  dist  => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
+  clean => { FILES    => 're-engine-Oniguruma-*' },
+  test  => { 'TESTS'  => 't/*.t t/*/*.t' },
+  DIR   => ['onig'],
+  INC   => '-Ionig',
+  LDDLFLAGS => join( ' ', @lddlflags ),
+  OBJECT    => join( ' ', @obj ),
 );
+
+sub license {
+  my $lic = shift;
+  local $^w = 0;    # silence warning about non-numeric version
+  return
+   unless $extutils::makemaker::version >= '6.31';
+  return ( license => $lic );
+}
 
 package MY;
 
@@ -54,9 +62,9 @@ package MY;
 # see the real target for some reason.
 
 sub top_targets {
-    my $tt = shift->SUPER::top_targets( @_ );
-    $tt =~ s{^ subdirs \s .*? ^(\S) }{$1}msgx;
-    return $tt;
+  my $tt = shift->SUPER::top_targets( @_ );
+  $tt =~ s{^ subdirs \s .*? ^(\S) }{$1}msgx;
+  return $tt;
 }
 
 package main;
