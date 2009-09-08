@@ -13,7 +13,6 @@ my @obj = map { $_ . $oe } qw(
 );
 
 WriteMakefile(
-  license( 'perl' ),
   NAME         => 'onig/enc',
   AUTHOR       => 'Andy Armstrong <andy@hexten.net>',
   VERSION_FROM => '../../lib/re/engine/Oniguruma.pm',
@@ -25,11 +24,3 @@ WriteMakefile(
   INC          => '-I..',
   linkext      => { LINKTYPE => 'static' }
 );
-
-sub license {
-  my $lic = shift;
-  local $^w = 0;    # silence warning about non-numeric version
-  return
-   unless $extutils::makemaker::version >= '6.31';
-  return ( license => $lic );
-}
