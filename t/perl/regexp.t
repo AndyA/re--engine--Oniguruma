@@ -1,3 +1,4 @@
+#!perl
 # The tests are in a separate file 't/op/re_tests'.
 # Each line in that file is a separate test.
 # There are five columns, separated by tabs.
@@ -102,7 +103,7 @@ TEST:
 for ( @tests ) {
 
     if ( !/\S/ || /^\s*#/ ) {
-        pass /\S/ ? $_ : '(blank line or comment)';
+        pass(/\S/ ? $_ : '(blank line or comment)');
         next TEST;
     }
 
@@ -251,4 +252,3 @@ sub details {
         Data::Dumper->new( [ \%det ], ['details'] )->Useqq( 1 )->Dump );
 }
 
-1;

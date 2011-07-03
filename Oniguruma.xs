@@ -4,9 +4,21 @@
 #include "XSUB.h"
 #include "oniguruma.h"
 
+#ifndef RX_WRAPPED
+#define RX_WRAPPED(rx) (rx)->wrapped
+#define RX_WRAPLEN(rx) (rx)->wraplen
+#endif
+
+#if PERL_VERSION > 10
+#define RegSV(sv) ((regexp*)SvANY(sv))
+#else
+#define RegSV(sv) ((regexp*)sv)
+#endif
+
 #define SAVEPVN(p,n)	((p) ? savepvn(p,n) : NULL)
 
-STATIC REGEXP *onig_perl_comp( pTHX_ const SV * const pattern,
+
+STATIC REGEXP *onig_perl_comp( pTHX_ SV * pattern,
                                const U32 flags );
 STATIC I32 onig_perl_exec( pTHX_ REGEXP * const rx, char *stringarg,
                            char *strend, char *strbeg, I32 minend, SV * sv,
@@ -42,10 +54,15 @@ STATIC const regexp_engine onig_engine = {
 STATIC int
 _build_callback( const UChar * name, const UChar * name_end, int ngroups,
                  int *groups, regex_t * onig, void *handle ) {
-    REGEXP *const rx = handle;
-    SV *sv_dat =
-        *hv_fetch( rx->paren_names, ( const char * ) name, name_end - name,
-                   TRUE );
+    regexp *const rx = (regexp*)handle;
+    SV *sv_dat;
+    assert(rx);
+
+    if(!rx->paren_names) {
+        rx->paren_names = newHV();
+    }
+    sv_dat = *hv_fetch( rx->paren_names,
+                ( const char * ) name, name_end - name, TRUE );
 
     if ( !sv_dat ) {
         croak( "Oniguruma: Failed to allocate paren_names hash" );
@@ -62,10 +79,9 @@ _build_callback( const UChar * name, const UChar * name_end, int ngroups,
 }
 
 STATIC void
-_build_name_map( REGEXP * const rx ) {
-    regex_t *onig = rx->pprivate;
+_build_name_map( regexp * const rx ) {
+    regex_t *onig = (regex_t*)rx->pprivate;
     if ( onig_number_of_names( onig ) ) {
-        rx->paren_names = newHV(  );
         ( void ) onig_foreach_name( onig, _build_callback, rx );
     }
     else {
@@ -84,13 +100,13 @@ _make_options( const U32 flags, OnigOptionType * option, char *fl_on,
     } flag_map[] = {
         /* *INDENT-OFF* */
         { RXf_PMf_EXTENDED,   ONIG_OPTION_EXTEND,     'x' },
-        { RXf_PMf_FOLD,       ONIG_OPTION_IGNORECASE, 'i' }, 
+        { RXf_PMf_FOLD,       ONIG_OPTION_IGNORECASE, 'i' },
         { RXf_PMf_SINGLELINE, ONIG_OPTION_SINGLELINE, 's' },
         /* Strange multiline + negate_singleline options have
          * been found empirically to work. Doesn't look right
          * though... */
         { RXf_PMf_MULTILINE,  ONIG_OPTION_MULTILINE
-                    | ONIG_OPTION_NEGATE_SINGLELINE,  'm' } 
+                    | ONIG_OPTION_NEGATE_SINGLELINE,  'm' }
         /* *INDENT-ON* */
     };
     int i;
@@ -118,18 +134,28 @@ _save_rep( pTHX_ REGEXP * rx, const SV * const pattern, const char *fl_on,
     const char *rep =
         form( "(?%s%s%s:%s)", fl_on, *fl_off ? "-" : "", fl_off,
               SvPV_nolen( ( SV * ) pattern ) );
+    I32 const len = (I32)strlen( rep);
 
-    rx->wraplen = ( I32 ) strlen( rep );
-    /* Newxz( rx->wrapped, (rx->wraplen + 1), 1 );
-       memcpy( rx->wrapped, rep, rx->wraplen + 1 ); */
+    RX_WRAPPED(rx) = savepvn( rep, len );
+    RX_WRAPLEN(rx) = len;
+}
 
-    /* TODO: Does this leak? */
-    rx->wrapped = savepv( rep );
+STATIC REGEXP*
+newREGEXP( pTHX ) {
+#if PERL_VERSION > 10
+    return (REGEXP*)newSV_type(SVt_REGEXP);
+#else
+    REGEXP* rx;
+    Newxz( rx, 1, REGEXP );
+    rx->refcnt = 1;
+    return rx;
+#endif
 }
 
 STATIC REGEXP *
-onig_perl_comp( pTHX_ const SV * const pattern, const U32 flags ) {
-    REGEXP *rx;
+onig_perl_comp( pTHX_ SV * const pattern, const U32 flags ) {
+    REGEXP *rxsv;
+    regexp *rx;
     regex_t *onig;
     STRLEN plen;
     UChar *exp = ( UChar * ) SvPV( ( SV * ) pattern, plen );
@@ -153,7 +179,7 @@ onig_perl_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     //       clear ONIG_OPTION_SINGLELINE which is enabled on
     //       ONIG_SYNTAX_POSIX_BASIC, ONIG_SYNTAX_POSIX_EXTENDED,
     //       ONIG_SYNTAX_PERL, ONIG_SYNTAX_PERL_NG, ONIG_SYNTAX_JAVA
-    // 
+    //
     // ONIG_OPTION_DONT_CAPTURE_GROUP only named group captured.
     // ONIG_OPTION_CAPTURE_GROUP      named and no-named group captured.
 
@@ -183,16 +209,21 @@ onig_perl_comp( pTHX_ const SV * const pattern, const U32 flags ) {
         croak( "Oniguruma: %s", erbuf );
     }
 
-    Newxz( rx, 1, REGEXP );
-    rx->refcnt = 1;
+    rxsv = newREGEXP(aTHX);
+    rx   = RegSV(rxsv);
+
     rx->extflags = extflags;
     rx->engine = &onig_engine;
 
     /* Preserve a copy of the original exp */
+    _save_rep( aTHX_ rxsv, pattern, fl_on, fl_off );
+#if PERL_VERSION >= 11
+    rx->pre_prefix = RX_WRAPLEN(rxsv) - plen - 1;
+#else
     rx->prelen = ( I32 ) plen;
     rx->precomp = SAVEPVN( ( char * ) exp, plen );
+#endif
 
-    _save_rep( aTHX_ rx, pattern, fl_on, fl_off );
 
     /* Store our private object */
     rx->pprivate = onig;
@@ -206,13 +237,14 @@ onig_perl_comp( pTHX_ const SV * const pattern, const U32 flags ) {
     _build_name_map( rx );
 
     /* return the regexp */
-    return rx;
+    return rxsv;
 }
 
 STATIC I32
-onig_perl_exec( pTHX_ REGEXP * const rx,
+onig_perl_exec( pTHX_ REGEXP * const rxsv,
                 char *stringarg, char *strend,
                 char *strbeg, I32 minend, SV * sv, void *data, U32 flags ) {
+    regexp* const rx = RegSV(rxsv);
     regex_t *onig = rx->pprivate;
     OnigOptionType option = ONIG_OPTION_NONE;
     OnigRegion *region = onig_region_new(  );
@@ -274,15 +306,15 @@ onig_perl_checkstr( pTHX_ REGEXP * const rx ) {
 }
 
 STATIC void
-onig_perl_free( pTHX_ REGEXP * const rx ) {
+onig_perl_free( pTHX_ REGEXP * const rxsv ) {
     /* Safefree( rx->wrapped ); */
-    onig_free( rx->pprivate );
+    onig_free( RegSV(rxsv)->pprivate );
 }
 
 STATIC void *
-onig_perl_dupe( pTHX_ REGEXP * const rx, CLONE_PARAMS * param ) {
+onig_perl_dupe( pTHX_ REGEXP * const rxsv, CLONE_PARAMS * param ) {
     PERL_UNUSED_ARG( param );
-    return rx->pprivate;
+    return RegSV(rxsv)->pprivate;
 }
 
 STATIC SV *
