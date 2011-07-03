@@ -9,6 +9,10 @@
 #define RX_WRAPLEN(rx) (rx)->wraplen
 #endif
 
+#ifndef RXp_PAREN_NAMES
+#define RXp_PAREN_NAMES(rx) (rx)->paren_names
+#endif
+
 #if PERL_VERSION > 10
 #define RegSV(sv) ((regexp*)SvANY(sv))
 #else
@@ -58,10 +62,7 @@ _build_callback( const UChar * name, const UChar * name_end, int ngroups,
     SV *sv_dat;
     assert(rx);
 
-    if(!rx->paren_names) {
-        rx->paren_names = newHV();
-    }
-    sv_dat = *hv_fetch( rx->paren_names,
+    sv_dat = *hv_fetch( RXp_PAREN_NAMES(rx),
                 ( const char * ) name, name_end - name, TRUE );
 
     if ( !sv_dat ) {
@@ -82,10 +83,11 @@ STATIC void
 _build_name_map( regexp * const rx ) {
     regex_t *onig = (regex_t*)rx->pprivate;
     if ( onig_number_of_names( onig ) ) {
+        RXp_PAREN_NAMES(rx) = newHV();
         ( void ) onig_foreach_name( onig, _build_callback, rx );
     }
     else {
-        rx->paren_names = NULL;
+        RXp_PAREN_NAMES(rx) = NULL;
     }
 
 }
