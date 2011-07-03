@@ -50,7 +50,7 @@ WriteMakefile(
 
 sub license {
   my $lic = shift;
-  local $^W = 0;    # Silence warning about non-numeric version
+  no warnings 'numeric';
   return
    unless $ExtUtils::MakeMaker::VERSION >= '6.31';
   return ( LICENSE => $lic );

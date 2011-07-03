@@ -27,10 +27,10 @@ WriteMakefile(
 
 sub license {
   my $lic = shift;
-  local $^w = 0;    # silence warning about non-numeric version
+  no warnings 'numeric';
   return
-   unless $extutils::makemaker::version >= '6.31';
-  return ( license => $lic );
+   unless $ExtUtils::MakeMaker::VERSION >= '6.31';
+  return ( LICENSE => $lic );
 }
 
 sub MY::static {
