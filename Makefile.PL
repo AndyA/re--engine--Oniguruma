@@ -6,24 +6,6 @@ use Config;
 
 eval 'use ExtUtils::MakeMaker::Coverage';
 
-my @lddlflags = ( $Config{lddlflags} );
-
-if ( $^O =~ /darwin/ ) {
-
-  # Hack for Perl in a non-standard location on Mac OS (which it will
-  # be until 5.10 ships with Mac OS).
-  #
-  # We need the location of perl and the directory containing
-  # libperl.dylib.
-  #
-  # Info from: http://www.advogato.org/article/627.html
-
-  @lddlflags = (
-    '-bundle', '-bundle_loader', $Config{perl5}, '-lperl',
-    "-L$Config{archlib}/CORE",
-  );
-}
-
 my $oe = $Config{obj_ext};
 my @obj = map { $_ . $oe } qw(
  Oniguruma onig/* onig/enc/*
@@ -44,7 +26,6 @@ WriteMakefile(
   test  => { 'TESTS'  => 't/*.t t/*/*.t' },
   DIR   => ['onig'],
   INC   => '-Ionig',
-  LDDLFLAGS => join( ' ', @lddlflags ),
   OBJECT    => join( ' ', @obj ),
 );
 
