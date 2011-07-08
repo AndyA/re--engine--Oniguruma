@@ -13,10 +13,10 @@ my @obj = map { $_ . $oe } qw(
 );
 
 WriteMakefile(
-  license('perl'),
   NAME         => 'onig',
   AUTHOR       => 'Andy Armstrong <andy@hexten.net>',
   VERSION_FROM => '../lib/re/engine/Oniguruma.pm',
+  LICENSE      => 'perl',
   DEFINE       => '-DHAVE_CONFIG_H',
   clean        => { FILES => "*.o *.lo *$oe" },
   OBJECT       => join( ' ', @obj ),
@@ -24,14 +24,6 @@ WriteMakefile(
   XS           => {},
   linkext      => { LINKTYPE => 'static' }
 );
-
-sub license {
-  my $lic = shift;
-  no warnings 'numeric';
-  return
-   unless $ExtUtils::MakeMaker::VERSION >= '6.31';
-  return ( LICENSE => $lic );
-}
 
 sub MY::static {
   return entab( <<'EOM');
