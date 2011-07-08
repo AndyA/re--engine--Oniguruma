@@ -9,25 +9,23 @@ use XSLoader ();
 # All engines should subclass the core Regexp package
 our @ISA = 'Regexp';
 
-BEGIN {
-    our $VERSION = '0.04';
-    XSLoader::load __PACKAGE__, $VERSION;
-}
+our $VERSION = '0.04';
+XSLoader::load __PACKAGE__, $VERSION;
 
 sub import {
-    $^H{regcomp} = ENGINE;
+    $^H{regcomp} = ENGINE();
 }
 
 sub unimport {
     delete $^H{regcomp}
-      if $^H{regcomp} == ENGINE;
+      if $^H{regcomp} == ENGINE();
 }
 
 1;
 
 __END__
 
-=head1 NAME 
+=head1 NAME
 
 re::engine::Oniguruma - Use the Oniguruma regex engine with Perl
 
