@@ -9,7 +9,7 @@ use XSLoader ();
 # All engines should subclass the core Regexp package
 our @ISA = 'Regexp';
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 XSLoader::load __PACKAGE__, $VERSION;
 
 sub import {
