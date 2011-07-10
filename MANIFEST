@@ -1,3 +1,4 @@
+.gitignore
 Changes
 examples/benchmark.pl
 lib/re/engine/Oniguruma.pm
@@ -5,6 +6,7 @@ Makefile.PL
 MANIFEST
 MANIFEST.SKIP
 META.yml
+onig/.gitignore
 onig/aclocal.m4
 onig/AUTHORS
 onig/compile
@@ -20,6 +22,7 @@ onig/doc/FAQ
 onig/doc/FAQ.ja
 onig/doc/RE
 onig/doc/RE.ja
+onig/enc/.gitignore
 onig/enc/ascii.c
 onig/enc/big5.c
 onig/enc/cp1251.c
@@ -83,6 +86,7 @@ onig/regposix.c
 onig/regsyntax.c
 onig/regtrav.c
 onig/regversion.c
+onig/sample/.gitignore
 onig/st.c
 onig/st.h
 onig/testc.c
